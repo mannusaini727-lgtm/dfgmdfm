@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UnifiedMentor – Certificate Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --gold:#c9a84c;--gold2:#f0d080;--gold3:#7a5c1e;
+  --navy:#0a1628;--navy2:#112240;--navy3:#1a3a5c;
+  --cream:#fdf8ee;--cream2:#f5edd8;
+  --text:#1a1a2e;--muted:#6b7280;
+  --success:#10b981;--danger:#ef4444;--info:#3b82f6;
+  --border:rgba(201,168,76,0.3);
+  --shadow:0 20px 60px rgba(0,0,0,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+/* ── NAV ── */
+nav{background:var(--navy);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4);}
+.nav-logo{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;font-weight:700;letter-spacing:.12em;display:flex;align-items:center;gap:.6rem;}
+.nav-logo span{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold3));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;}
+.nav-links{display:flex;gap:.25rem;}
+.nav-btn{background:none;border:none;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:.85rem;padding:.5rem 1rem;border-radius:6px;cursor:pointer;transition:.2s;letter-spacing:.04em;}
+.nav-btn:hover,.nav-btn.active{background:rgba(201,168,76,.15);color:var(--gold);}
+
+/* ── PAGES ── */
+.page{display:none;min-height:calc(100vh - 64px);padding:2rem;}
+.page.active{display:block;animation:fadeIn .4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:4rem 1rem 3rem;max-width:800px;margin:0 auto;}
+.hero h1{font-family:'Cinzel',serif;font-size:clamp(2rem,5vw,3.2rem);color:var(--navy);font-weight:900;line-height:1.15;margin-bottom:1rem;}
+.hero h1 span{background:linear-gradient(135deg,var(--gold),var(--gold3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{font-size:1.05rem;color:var(--muted);max-width:560px;margin:0 auto 2.5rem;line-height:1.7;}
+.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.2rem;max-width:900px;margin:0 auto;}
+.hero-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.8rem 1.5rem;text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.06);transition:.3s;cursor:pointer;}
+.hero-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--gold);}
+.hero-card .icon{font-size:2rem;margin-bottom:.8rem;}
+.hero-card h3{font-family:'Cinzel',serif;font-size:.95rem;color:var(--navy);margin-bottom:.4rem;}
+.hero-card p{font-size:.82rem;color:var(--muted);line-height:1.5;}
+
+/* ── FORMS ── */
+.card{background:#fff;border-radius:20px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,.07);border:1px solid var(--border);margin-bottom:1.5rem;}
+.card-title{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--navy);font-weight:700;margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem;}
+.card-title::before{content:'';width:4px;height:1.2em;background:linear-gradient(var(--gold),var(--gold3));border-radius:2px;}
+label{display:block;font-size:.82rem;font-weight:600;color:var(--navy);margin-bottom:.35rem;letter-spacing:.03em;}
+input,select,textarea{width:100%;padding:.75rem 1rem;border:1.5px solid #e5e7eb;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);background:#fafafa;transition:.2s;outline:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1rem;}
+.form-field{margin-bottom:1rem;}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.75rem;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:.25s;letter-spacing:.03em;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#fff;box-shadow:0 4px 14px rgba(201,168,76,.35);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,.45);}
+.btn-secondary{background:var(--navy);color:#fff;}
+.btn-secondary:hover{background:var(--navy3);}
+.btn-outline{background:transparent;border:1.5px solid var(--gold);color:var(--gold3);}
+.btn-outline:hover{background:var(--gold);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+
+/* ── ADMIN LOGIN ── */
+.admin-login{max-width:420px;margin:4rem auto;padding:3rem;background:#fff;border-radius:24px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;}
+.admin-login h2{font-family:'Cinzel',serif;color:var(--navy);margin-bottom:.5rem;}
+.admin-login p{color:var(--muted);font-size:.88rem;margin-bottom:2rem;}
+.lock-icon{font-size:3rem;margin-bottom:1rem;}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th{background:var(--navy);color:rgba(255,255,255,.85);padding:.75rem 1rem;text-align:left;font-weight:600;letter-spacing:.04em;font-size:.8rem;}
+td{padding:.75rem 1rem;border-bottom:1px solid #f0f0f0;color:var(--text);}
+tr:hover td{background:var(--cream);}
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .75rem;border-radius:20px;font-size:.75rem;font-weight:600;}
+.badge-active{background:#d1fae5;color:#065f46;}
+.badge-pending{background:#fef3c7;color:#92400e;}
+.badge-revoked{background:#fee2e2;color:#991b1b;}
+
+/* ── VERIFICATION ── */
+.verify-box{max-width:560px;margin:0 auto;text-align:center;}
+.verify-result{margin-top:2rem;padding:2rem;border-radius:16px;border:2px solid;}
+.verify-valid{border-color:var(--success);background:#f0fdf4;}
+.verify-invalid{border-color:var(--danger);background:#fef2f2;}
+.verify-icon{font-size:3rem;margin-bottom:.75rem;}
+
+/* ── CERTIFICATE ── */
+#cert-preview-wrap{display:none;}
+.cert-container{max-width:900px;margin:0 auto;}
+
+/* ── CERTIFICATE DESIGN ── */
+.cert-paper{
+  width:100%;max-width:860px;margin:0 auto;
+  background:linear-gradient(160deg,#fffdf5 0%,#fdf3d0 50%,#fff9e8 100%);
+  border:none;position:relative;overflow:hidden;
+  aspect-ratio:1.414/1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 60px;font-family:'Cormorant Garamond',serif;
+  box-shadow:0 30px 80px rgba(0,0,0,.2);
+}
+
+/* Animated border */
+.cert-border-outer{position:absolute;inset:12px;border:2.5px solid var(--gold);border-radius:4px;pointer-events:none;}
+.cert-border-inner{position:absolute;inset:18px;border:1px solid rgba(201,168,76,.4);border-radius:2px;pointer-events:none;}
+
+/* Corner ornaments */
+.cert-corner{position:absolute;width:60px;height:60px;pointer-events:none;}
+.cert-corner svg{width:100%;height:100%;}
+.cert-corner.tl{top:8px;left:8px;}
+.cert-corner.tr{top:8px;right:8px;transform:scaleX(-1);}
+.cert-corner.bl{bottom:8px;left:8px;transform:scaleY(-1);}
+.cert-corner.br{bottom:8px;right:8px;transform:scale(-1);}
+
+/* Watermark */
+.cert-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Cinzel',serif;font-size:5rem;color:rgba(201,168,76,.07);white-space:nowrap;pointer-events:none;z-index:0;letter-spacing:.3em;font-weight:900;}
+
+/* Animated diagonal lines */
+.cert-lines{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.cert-lines svg{width:100%;height:100%;opacity:.04;}
+
+/* Content */
+.cert-content{position:relative;z-index:1;text-align:center;width:100%;}
+.cert-logo-row{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-bottom:.6rem;}
+.cert-org{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;color:var(--gold3);text-transform:uppercase;margin-bottom:.3rem;}
+.cert-title{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:900;color:var(--navy);letter-spacing:.08em;margin-bottom:.15rem;}
+.cert-subtitle{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.3em;color:var(--gold3);margin-bottom:.9rem;}
+.cert-divider{width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:.5rem auto;}
+.cert-presents{font-size:.78rem;letter-spacing:.15em;color:#888;font-style:italic;margin-bottom:.4rem;}
+.cert-name{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;color:var(--navy);margin:.3rem 0;border-bottom:1.5px solid var(--gold);display:inline-block;padding-bottom:.1rem;min-width:260px;}
+.cert-body{font-size:.82rem;color:#555;line-height:1.8;max-width:560px;margin:.5rem auto;}
+.cert-domain-title{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold3);margin:.3rem 0;font-weight:700;}
+.cert-duration{font-size:.75rem;color:#777;letter-spacing:.1em;margin:.2rem 0 .6rem;}
+
+/* domain description lines */
+.cert-desc{font-size:.72rem;color:#666;font-style:italic;max-width:500px;margin:.3rem auto .5rem;line-height:1.6;}
+
+/* Signature row */
+.cert-sig-row{display:flex;align-items:flex-end;justify-content:space-between;width:100%;margin-top:.8rem;gap:1rem;}
+.cert-sig-block{text-align:center;flex:1;}
+.cert-sig-img{font-family:'Satisfy',cursive,serif;font-size:1.3rem;color:var(--navy);border-bottom:1.5px solid #aaa;padding-bottom:.2rem;min-width:120px;display:inline-block;font-style:italic;}
+.cert-sig-label{font-size:.62rem;letter-spacing:.12em;color:#999;text-transform:uppercase;margin-top:.25rem;}
+
+/* QR */
+.cert-qr-block{display:flex;flex-direction:column;align-items:center;gap:.3rem;}
+.cert-qr-block #cert-qr{width:72px!important;height:72px!important;}
+.cert-qr-block #cert-qr img,.cert-qr-block #cert-qr canvas{width:72px!important;height:72px!important;}
+.cert-qr-label{font-size:.55rem;letter-spacing:.1em;color:#999;text-transform:uppercase;}
+
+/* ISO badge */
+.iso-badge{display:flex;align-items:center;gap:.4rem;background:linear-gradient(135deg,#1a3a5c,#0a1628);color:#fff;padding:.3rem .7rem;border-radius:6px;font-size:.6rem;letter-spacing:.1em;font-family:'Cinzel',serif;}
+.iso-badge .iso-ring{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold3));display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#fff;}
+
+/* CIN */
+.cert-cin{font-size:.58rem;color:#999;letter-spacing:.08em;margin-top:.4rem;}
+
+/* Animated shimmer line */
+@keyframes shimmerLine{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+.cert-shimmer-wrap{position:absolute;bottom:0;left:0;right:0;height:3px;overflow:hidden;}
+.cert-shimmer{height:100%;width:60%;background:linear-gradient(90deg,transparent,var(--gold2),transparent);animation:shimmerLine 3s linear infinite;}
+
+/* Stamp */
+.cert-stamp{position:absolute;bottom:50px;right:50px;width:80px;height:80px;border-radius:50%;border:3px solid rgba(201,168,76,.25);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.45rem;color:rgba(201,168,76,.3);text-align:center;letter-spacing:.08em;transform:rotate(-18deg);line-height:1.3;pointer-events:none;z-index:0;}
+
+/* ── PRINT ── */
+@media print{nav,#cert-actions{display:none!important;}.page{padding:0!important;}.cert-paper{box-shadow:none!important;}}
+
+/* ── SEARCH HERO ── */
+.search-hero{text-align:center;padding:3rem 1rem 2rem;}
+.search-hero h2{font-family:'Cinzel',serif;font-size:1.8rem;color:var(--navy);margin-bottom:.5rem;}
+.search-bar{display:flex;max-width:520px;margin:1.5rem auto 0;gap:.5rem;}
+.search-bar input{flex:1;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--navy);color:#fff;padding:.9rem 1.5rem;border-radius:12px;font-size:.88rem;box-shadow:var(--shadow);transform:translateY(20px);opacity:0;transition:.3s;z-index:999;}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* animations for cert check */
+@keyframes checkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.check-anim{animation:checkPulse .8s ease 2;}
+@keyframes borderGlow{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.3)}50%{box-shadow:0 0 0 12px rgba(16,185,129,.0)}}
+.valid-glow{animation:borderGlow 1.5s ease 3;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><span>UM</span>UnifiedMentor</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('home')">🏠 Home</button>
+    <button class="nav-btn" onclick="showPage('verify')">🔍 Verify</button>
+    <button class="nav-btn" onclick="showPage('admin-gate')">🔒 Admin</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════ HOME ══════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h1>Certificate <span>Verification</span> Portal</h1>
+    <p>Issue, manage, and instantly verify authentic learning certificates from UnifiedMentor — powered by QR codes and unique CIN numbers.</p>
+    <div style="margin-bottom:2rem;">
+      <a href="http://www.unifiedmentor.com" target="_blank" style="color:var(--gold3);font-size:.9rem;font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--gold3);padding-bottom:2px;">🌐 www.unifiedmentor.com</a>
+    </div>
+    <div class="hero-cards">
+      <div class="hero-card" onclick="showPage('verify')">
+        <div class="icon">🔍</div>
+        <h3>Verify Certificate</h3>
+        <p>Enter a CIN number or scan a QR code to instantly verify any certificate.</p>
+      </div>
+      <div class="hero-card" onclick="showPage('admin-gate')">
+        <div class="icon">🛡️</div>
+        <h3>Admin Portal</h3>
+        <p>Issue new certificates, manage records, and upload bulk batches securely.</p>
+      </div>
+      <div class="hero-card" onclick="showPage('verify')">
+        <div class="icon">📜</div>
+        <h3>ISO Certified</h3>
+        <p>All certificates are ISO 9001:2015 compliant and digitally signed.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ VERIFY ══════════════════════════════════ -->
+<div id="page-verify" class="page">
+  <div class="search-hero">
+    <h2>🔍 Certificate Verification</h2>
+    <p style="color:var(--muted);font-size:.9rem;">Enter your CIN Number to verify authenticity</p>
+    <div class="search-bar">
+      <input type="text" id="verify-input" placeholder="Enter CIN No. e.g. UM-2024-WD-0042" style="text-transform:uppercase;"/>
+      <button class="btn btn-primary" onclick="verifyCertificate()">Verify</button>
+    </div>
+  </div>
+  <div class="verify-box">
+    <div id="verify-result" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ ADMIN GATE ══════════════════════════════════ -->
+<div id="page-admin-gate" class="page">
+  <div class="admin-login">
+    <div class="lock-icon">🔐</div>
+    <h2>Admin Access</h2>
+    <p>Enter your administrator password to continue</p>
+    <div class="form-field" style="text-align:left;margin-bottom:1.2rem;">
+      <label>Password</label>
+      <input type="password" id="admin-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="adminLogin()">🔓 Login</button>
+    <p style="margin-top:1rem;font-size:.75rem;color:var(--muted);">Default password: <code>admin123</code></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ ADMIN ══════════════════════════════════ -->
+<div id="page-admin" class="page" style="max-width:1100px;margin:0 auto;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+    <h2 style="font-family:'Cinzel',serif;color:var(--navy);font-size:1.3rem;">🛡️ Admin Dashboard</h2>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="switchAdminTab('issue')">📝 Issue Certificate</button>
+      <button class="btn btn-outline" onclick="switchAdminTab('list')">📋 All Certificates</button>
+      <button class="btn btn-secondary" onclick="adminLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- ISSUE FORM -->
+  <div id="admin-tab-issue">
+    <div class="card">
+      <div class="card-title">Issue New Certificate</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label>👤 Person Name *</label>
+          <input type="text" id="f-name" placeholder="Full Name"/>
+        </div>
+        <div class="form-field">
+          <label>📧 Email</label>
+          <input type="email" id="f-email" placeholder="email@example.com"/>
+        </div>
+        <div class="form-field">
+          <label>🎓 Domain / Course *</label>
+          <select id="f-domain" onchange="updateDomainHint()">
+            <option value="">-- Select Domain --</option>
+            <option value="Web Development">Web Development</option>
+            <option value="Data Science">Data Science</option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Cybersecurity">Cybersecurity</option>
+            <option value="Cloud Computing">Cloud Computing</option>
+            <option value="Digital Marketing">Digital Marketing</option>
+            <option value="UI/UX Design">UI/UX Design</option>
+            <option value="Python Programming">Python Programming</option>
+            <option value="Java Development">Java Development</option>
+            <option value="DevOps Engineering">DevOps Engineering</option>
+            <option value="Blockchain">Blockchain</option>
+            <option value="AI & Robotics">AI & Robotics</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>📅 Duration</label>
+          <select id="f-duration">
+            <option>1 Month</option>
+            <option>2 Months</option>
+            <option>3 Months</option>
+            <option>6 Months</option>
+            <option>1 Year</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>🏆 Grade / Score</label>
+          <select id="f-grade">
+            <option>A+ (Outstanding)</option>
+            <option>A (Excellent)</option>
+            <option>B+ (Very Good)</option>
+            <option>B (Good)</option>
+            <option>C (Satisfactory)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>📆 Issue Date</label>
+          <input type="date" id="f-date"/>
+        </div>
+        <div class="form-field">
+          <label>✍️ Director / Signatory Name</label>
+          <input type="text" id="f-director" value="Rahul Sharma" placeholder="Director Name"/>
+        </div>
+        <div class="form-field">
+          <label>🏅 Award Title</label>
+          <input type="text" id="f-award" value="Certificate of Completion" placeholder="Award Title"/>
+        </div>
+      </div>
+      <div id="domain-hint" style="background:var(--cream2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;display:none;font-size:.83rem;color:var(--navy);line-height:1.6;">
+        <strong>📝 Auto-generated description for this domain will appear on certificate.</strong>
+      </div>
+      <button class="btn btn-primary" onclick="generateCertificate()">🎓 Generate Certificate</button>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="cert-preview-wrap">
+      <div class="card">
+        <div class="card-title">Certificate Preview</div>
+        <div id="cert-actions" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <button class="btn btn-secondary" onclick="downloadCertHTML()">⬇️ Download HTML</button>
+          <button class="btn btn-outline" onclick="saveCertToList()">💾 Save to Records</button>
+        </div>
+        <div class="cert-container">
+          <div class="cert-paper" id="cert-paper">
+
+            <!-- Animated lines SVG -->
+            <div class="cert-lines">
+              <svg viewBox="0 0 860 600" preserveAspectRatio="none">
+                <defs>
+                  <pattern id="diagLines" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="40" stroke="#c9a84c" stroke-width="0.8"/>
+                  </pattern>
+                </defs>
+                <rect width="860" height="600" fill="url(#diagLines)"/>
+              </svg>
+            </div>
+
+            <!-- Borders -->
+            <div class="cert-border-outer"></div>
+            <div class="cert-border-inner"></div>
+
+            <!-- Corners -->
+            <div class="cert-corner tl"><svg viewBox="0 0 60 60" fill="none"><path d="M4 56 L4 4 L56 4" stroke="#c9a84c" stroke-width="2"/><circle cx="4" cy="4" r="4" fill="#c9a84c"/><path d="M12 48 L12 12 L48 12" stroke="rgba(201,168,76,.4)" stroke-width="1"/></svg></div>
+            <div class="cert-corner tr"><svg viewBox="0 0 60 60" fill="none"><path d="M4 56 L4 4 L56 4" stroke="#c9a84c" stroke-width="2"/><circle cx="4" cy="4" r="4" fill="#c9a84c"/><path d="M12 48 L12 12 L48 12" stroke="rgba(201,168,76,.4)" stroke-width="1"/></svg></div>
+            <div class="cert-corner bl"><svg viewBox="0 0 60 60" fill="none"><path d="M4 56 L4 4 L56 4" stroke="#c9a84c" stroke-width="2"/><circle cx="4" cy="4" r="4" fill="#c9a84c"/><path d="M12 48 L12 12 L48 12" stroke="rgba(201,168,76,.4)" stroke-width="1"/></svg></div>
+            <div class="cert-corner br"><svg viewBox="0 0 60 60" fill="none"><path d="M4 56 L4 4 L56 4" stroke="#c9a84c" stroke-width="2"/><circle cx="4" cy="4" r="4" fill="#c9a84c"/><path d="M12 48 L12 12 L48 12" stroke="rgba(201,168,76,.4)" stroke-width="1"/></svg></div>
+
+            <!-- Watermark -->
+            <div class="cert-watermark">UM</div>
+
+            <!-- Stamp -->
+            <div class="cert-stamp">UNIFIED<br/>MENTOR<br/>CERTIFIED<br/>✦</div>
+
+            <!-- Main Content -->
+            <div class="cert-content">
+              <div class="cert-logo-row">
+                <div class="iso-badge">
+                  <div class="iso-ring">ISO</div>
+                  <div><div style="font-size:.65rem;font-weight:700;">ISO 9001:2015</div><div style="font-size:.5rem;opacity:.8;">CERTIFIED</div></div>
+                </div>
+                <div>
+                  <div class="cert-org">UnifiedMentor Learning Institute</div>
+                  <div style="font-size:.58rem;color:#aaa;letter-spacing:.1em;">www.unifiedmentor.com</div>
+                </div>
+                <div class="iso-badge" style="background:linear-gradient(135deg,var(--gold3),var(--gold));">
+                  <div class="iso-ring" style="background:rgba(255,255,255,.2);">🏅</div>
+                  <div><div style="font-size:.65rem;">VERIFIED</div><div style="font-size:.5rem;">CERTIFICATE</div></div>
+                </div>
+              </div>
+
+              <div class="cert-divider"></div>
+              <div id="c-award" class="cert-title">Certificate of Completion</div>
+              <div class="cert-subtitle">✦ &nbsp; EXCELLENCE IN EDUCATION &nbsp; ✦</div>
+              <div class="cert-divider"></div>
+
+              <div class="cert-presents">This is to proudly certify that</div>
+              <div id="c-name" class="cert-name">— Name —</div>
+
+              <div class="cert-body">
+                has successfully completed the prescribed programme in
+              </div>
+
+              <div id="c-domain" class="cert-domain-title">Domain / Course</div>
+              <div id="c-duration" class="cert-duration">Duration: — &nbsp;|&nbsp; Grade: —</div>
+              <div id="c-desc" class="cert-desc"></div>
+
+              <!-- Signature row -->
+              <div class="cert-sig-row">
+                <div class="cert-sig-block">
+                  <div id="c-sig-dir" class="cert-sig-img" style="font-family:'Brush Script MT',cursive;font-size:1.4rem;">Rahul Sharma</div>
+                  <div class="cert-sig-label" id="c-dir-label">Director, UnifiedMentor</div>
+                  <div id="c-date" class="cert-cin" style="margin-top:.3rem;"></div>
+                </div>
+
+                <div class="cert-qr-block">
+                  <div id="cert-qr"></div>
+                  <div class="cert-qr-label">Scan to Verify</div>
+                  <div id="c-cin" class="cert-cin">CIN: —</div>
+                </div>
+
+                <div class="cert-sig-block">
+                  <div id="c-sig-awd" class="cert-sig-img" style="font-family:'Brush Script MT',cursive;font-size:1.4rem;">Priya Verma</div>
+                  <div class="cert-sig-label">Academic Head</div>
+                  <div class="cert-cin">UnifiedMentor</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- shimmer line -->
+            <div class="cert-shimmer-wrap"><div class="cert-shimmer"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATES LIST -->
+  <div id="admin-tab-list" style="display:none;">
+    <div class="card">
+      <div class="card-title">All Certificates</div>
+      <div style="display:flex;gap:.75rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+        <input type="text" id="search-certs" placeholder="Search by name, CIN, domain…" style="max-width:320px;" oninput="renderTable()"/>
+        <button class="btn btn-primary" onclick="switchAdminTab('issue')">+ Issue New</button>
+      </div>
+      <div class="table-wrap">
+        <table id="certs-table">
+          <thead>
+            <tr>
+              <th>CIN No.</th><th>Name</th><th>Domain</th><th>Duration</th><th>Grade</th><th>Date</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="certs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ────────────────────────────── DATA STORE ──────────────────────────────
+const ADMIN_PASSWORD = 'Rogmonster@1617';
+let certificates = JSON.parse(localStorage.getItem('um_certs') || '[]');
+
+function saveCerts(){localStorage.setItem('um_certs',JSON.stringify(certificates));}
+
+// ────────────────────────────── NAVIGATION ──────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.textContent.toLowerCase().includes(id.split('-')[0].toLowerCase()))b.classList.add('active');});
+}
+
+// ────────────────────────────── ADMIN AUTH ──────────────────────────────
+function adminLogin(){
+  const pwd = document.getElementById('admin-pwd').value;
+  if(pwd===ADMIN_PASSWORD){showPage('admin');toast('✅ Welcome, Admin!','success');renderTable();}
+  else toast('❌ Wrong password','error');
+}
+function adminLogout(){showPage('home');document.getElementById('admin-pwd').value='';}
+
+// ────────────────────────────── ADMIN TABS ──────────────────────────────
+function switchAdminTab(tab){
+  document.getElementById('admin-tab-issue').style.display = tab==='issue'?'block':'none';
+  document.getElementById('admin-tab-list').style.display  = tab==='list' ?'block':'none';
+  if(tab==='list')renderTable();
+}
+
+// ────────────────────────────── DOMAIN DESCRIPTIONS ──────────────────────────────
+const domainData = {
+  'Web Development':    {desc:"Mastered front-end and back-end web technologies including HTML5, CSS3, JavaScript, React and Node.js, building responsive and accessible web applications.",icon:"💻"},
+  'Data Science':       {desc:"Demonstrated expertise in data analysis, statistical modelling, data visualisation using Python, Pandas, NumPy and Matplotlib to derive actionable insights.",icon:"📊"},
+  'Machine Learning':   {desc:"Acquired proficiency in supervised, unsupervised and reinforcement learning algorithms, model training, evaluation and deployment using TensorFlow and scikit-learn.",icon:"🤖"},
+  'Cybersecurity':      {desc:"Completed comprehensive training in network security, ethical hacking, vulnerability assessment, cryptography and incident response methodologies.",icon:"🔐"},
+  'Cloud Computing':    {desc:"Gained hands-on experience with AWS, Azure and GCP cloud platforms including deployment, auto-scaling, serverless architecture and DevOps pipelines.",icon:"☁️"},
+  'Digital Marketing':  {desc:"Learned SEO, SEM, social media marketing, email campaigns, analytics and content strategy to drive measurable business growth online.",icon:"📈"},
+  'UI/UX Design':       {desc:"Developed skills in user research, wireframing, prototyping and usability testing using Figma and Adobe XD, with strong focus on human-centred design.",icon:"🎨"},
+  'Python Programming': {desc:"Built strong Python programming foundations covering OOP, data structures, algorithms, file handling, APIs and automation scripting.",icon:"🐍"},
+  'Java Development':   {desc:"Completed core and advanced Java programming including OOP principles, Spring Boot, REST APIs, database connectivity and enterprise application patterns.",icon:"☕"},
+  'DevOps Engineering': {desc:"Trained in CI/CD pipelines, Docker, Kubernetes, infrastructure as code, monitoring and collaboration practices for streamlined software delivery.",icon:"⚙️"},
+  'Blockchain':         {desc:"Studied distributed ledger technology, smart contracts, Ethereum, Solidity programming and decentralised application (dApp) development.",icon:"⛓️"},
+  'AI & Robotics':      {desc:"Explored artificial intelligence concepts, computer vision, natural language processing, sensor integration and autonomous systems design.",icon:"🦾"},
+};
+
+function updateDomainHint(){
+  const domain = document.getElementById('f-domain').value;
+  const hint   = document.getElementById('domain-hint');
+  if(domain && domainData[domain]){
+    hint.innerHTML=`<strong>${domainData[domain].icon} Domain Description (auto-generated):</strong><br/>${domainData[domain].desc}`;
+    hint.style.display='block';
+  } else hint.style.display='none';
+}
+
+// ────────────────────────────── CIN GENERATOR ──────────────────────────────
+function generateCIN(domain, date){
+  const domainCode = {
+    'Web Development':'WD','Data Science':'DS','Machine Learning':'ML',
+    'Cybersecurity':'CS','Cloud Computing':'CC','Digital Marketing':'DM',
+    'UI/UX Design':'UX','Python Programming':'PY','Java Development':'JV',
+    'DevOps Engineering':'DO','Blockchain':'BC','AI & Robotics':'AR'
+  }[domain] || 'GN';
+  const year = new Date(date).getFullYear() || new Date().getFullYear();
+  const rand  = String(Math.floor(Math.random()*9000)+1000);
+  return `UM-${year}-${domainCode}-${rand}`;
+}
+
+// ────────────────────────────── GENERATE CERTIFICATE ──────────────────────────────
+let currentCert = null;
+
+function generateCertificate(){
+  const name     = document.getElementById('f-name').value.trim();
+  const domain   = document.getElementById('f-domain').value;
+  const duration = document.getElementById('f-duration').value;
+  const grade    = document.getElementById('f-grade').value;
+  const date     = document.getElementById('f-date').value || new Date().toISOString().split('T')[0];
+  const director = document.getElementById('f-director').value.trim() || 'Rahul Sharma';
+  const award    = document.getElementById('f-award').value.trim() || 'Certificate of Completion';
+  const email    = document.getElementById('f-email').value.trim();
+
+  if(!name){toast('❌ Please enter person name','error');return;}
+  if(!domain){toast('❌ Please select a domain','error');return;}
+
+  const cin = generateCIN(domain, date);
+  const verifyUrl = `https://certificateunifiedmentor1.vercel.app/verify?cin=${cin}`;
+  const dd = domainData[domain];
+
+  currentCert = {cin,name,domain,duration,grade,date,director,award,email,verifyUrl,status:'active'};
+
+  // Fill cert elements
+  document.getElementById('c-award').textContent  = award;
+  document.getElementById('c-name').textContent   = name;
+  document.getElementById('c-domain').textContent = `${dd?dd.icon+' ':''} ${domain}`;
+  document.getElementById('c-duration').textContent = `Duration: ${duration}  |  Grade: ${grade}`;
+  document.getElementById('c-desc').textContent   = dd ? dd.desc : '';
+  document.getElementById('c-sig-dir').textContent = director;
+  document.getElementById('c-sig-awd').textContent = 'Priya Verma';
+  document.getElementById('c-date').textContent   = 'Date: '+formatDate(date);
+  document.getElementById('c-cin').textContent    = 'CIN: '+cin;
+
+  // QR Code
+  const qrDiv = document.getElementById('cert-qr');
+  qrDiv.innerHTML='';
+  new QRCode(qrDiv,{text:verifyUrl,width:72,height:72,colorDark:'#0a1628',colorLight:'#fffdf5'});
+
+  document.getElementById('cert-preview-wrap').style.display='block';
+  document.getElementById('cert-preview-wrap').scrollIntoView({behavior:'smooth'});
+  toast('🎓 Certificate generated! CIN: '+cin,'success');
+}
+
+function saveCertToList(){
+  if(!currentCert)return;
+  const exists = certificates.find(c=>c.cin===currentCert.cin);
+  if(!exists){certificates.push({...currentCert});saveCerts();toast('💾 Saved to records!','success');}
+  else toast('ℹ️ Already saved','info');
+}
+
+// ────────────────────────────── CERTIFICATE LIST ──────────────────────────────
+function renderTable(){
+  const q = (document.getElementById('search-certs')?.value||'').toLowerCase();
+  const tbody = document.getElementById('certs-tbody');
+  const filtered = certificates.filter(c=>
+    c.cin.toLowerCase().includes(q)||c.name.toLowerCase().includes(q)||
+    c.domain.toLowerCase().includes(q)
+  );
+  tbody.innerHTML = filtered.length===0
+    ? `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No certificates found</td></tr>`
+    : filtered.map(c=>`
+      <tr>
+        <td><code style="font-size:.78rem;color:var(--gold3);">${c.cin}</code></td>
+        <td><strong>${c.name}</strong></td>
+        <td>${c.domain}</td>
+        <td>${c.duration}</td>
+        <td>${c.grade.split(' ')[0]}</td>
+        <td>${formatDate(c.date)}</td>
+        <td><span class="badge badge-${c.status||'active'}">${c.status||'active'}</span></td>
+        <td>
+          <button class="btn btn-outline" style="padding:.35rem .75rem;font-size:.75rem;" onclick="viewCert('${c.cin}')">👁 View</button>
+          <button class="btn btn-danger" style="padding:.35rem .75rem;font-size:.75rem;margin-left:.25rem;" onclick="deleteCert('${c.cin}')">🗑</button>
+        </td>
+      </tr>`).join('');
+}
+
+function deleteCert(cin){
+  if(confirm('Delete certificate '+cin+'?')){
+    certificates=certificates.filter(c=>c.cin!==cin);
+    saveCerts();renderTable();toast('🗑 Deleted','error');
+  }
+}
+
+function viewCert(cin){
+  const c = certificates.find(x=>x.cin===cin);
+  if(!c)return;
+  // populate form and regenerate
+  document.getElementById('f-name').value=c.name;
+  document.getElementById('f-email').value=c.email||'';
+  document.getElementById('f-domain').value=c.domain;
+  document.getElementById('f-duration').value=c.duration;
+  document.getElementById('f-grade').value=c.grade;
+  document.getElementById('f-date').value=c.date;
+  document.getElementById('f-director').value=c.director;
+  document.getElementById('f-award').value=c.award;
+  updateDomainHint();
+  switchAdminTab('issue');
+  currentCert=c;
+  generateCertificate();
+}
+
+// ────────────────────────────── VERIFY ──────────────────────────────
+function verifyCertificate(){
+  const cin = document.getElementById('verify-input').value.trim().toUpperCase();
+  const box = document.getElementById('verify-result');
+  if(!cin){toast('Enter a CIN number','error');return;}
+
+  const cert = certificates.find(c=>c.cin===cin);
+  box.style.display='block';
+
+  if(cert){
+    box.className='verify-result verify-valid valid-glow';
+    const dd = domainData[cert.domain];
+    box.innerHTML=`
+      <div class="verify-icon check-anim">✅</div>
+      <h3 style="font-family:'Cinzel',serif;color:#065f46;margin-bottom:.5rem;">Certificate Verified!</h3>
+      <p style="color:#065f46;font-size:.88rem;margin-bottom:1.2rem;">This certificate is <strong>authentic and valid</strong>.</p>
+      <div style="background:#fff;border-radius:12px;padding:1.2rem;text-align:left;font-size:.85rem;line-height:2;">
+        <div>🏷️ <strong>CIN:</strong> ${cert.cin}</div>
+        <div>👤 <strong>Name:</strong> ${cert.name}</div>
+        <div>${dd?dd.icon:'🎓'} <strong>Domain:</strong> ${cert.domain}</div>
+        <div>⏱️ <strong>Duration:</strong> ${cert.duration}</div>
+        <div>🏆 <strong>Grade:</strong> ${cert.grade}</div>
+        <div>📅 <strong>Issued:</strong> ${formatDate(cert.date)}</div>
+        <div>🔒 <strong>Status:</strong> <span class="badge badge-${cert.status||'active'}">${cert.status||'active'}</span></div>
+        <div>🌐 <strong>Verify at:</strong> <a href="https://certificateunifiedmentor2.vercel.app" target="_blank" style="color:var(--gold3);">www.unifiedmentor.com</a></div>
+      </div>`;
+  } else {
+    box.className='verify-result verify-invalid';
+    box.innerHTML=`
+      <div class="verify-icon">❌</div>
+      <h3 style="font-family:'Cinzel',serif;color:#991b1b;margin-bottom:.5rem;">Certificate Not Found</h3>
+      <p style="color:#991b1b;font-size:.88rem;">No certificate with CIN <strong>${cin}</strong> was found in our records.<br/>
+      Please check the CIN number or contact us at <a href="https://certificateunifiedmentor2.vercel.app" style="color:var(--gold3);">www.unifiedmentor.com</a></p>`;
+  }
+}
+
+// ────────────────────────────── UTILITIES ──────────────────────────────
+function formatDate(d){
+  if(!d)return '—';
+  const dt=new Date(d);
+  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function toast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=type==='success'?'#065f46':type==='error'?'#991b1b':'var(--navy)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function downloadCertHTML(){
+  const html = document.getElementById('cert-paper').outerHTML;
+  const full = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+  <style>body{margin:0;padding:2rem;background:#f5edd8;display:flex;justify-content:center;}</style>
+  </head><body>${html}</body></html>`;
+  const blob=new Blob([full],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='certificate_'+( currentCert?.cin||'um')+'.html';
+  a.click();
+}
+
+// ────────────────────────────── INIT ──────────────────────────────
+document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+
+// seed some sample certs if empty
+if(certificates.length===0){
+  certificates=[
+    {cin:'UM-2024-WD-1042',name:'Arjun Mehta',domain:'Web Development',duration:'3 Months',grade:'A+ (Outstanding)',date:'2024-03-15',director:'Rahul Sharma',award:'Certificate of Completion',email:'arjun@example.com',verifyUrl:'http://www.unifiedmentor.com/verify?cin=UM-2024-WD-1042',status:'active'},
+    {cin:'UM-2024-DS-2218',name:'Sneha Patel',domain:'Data Science',duration:'6 Months',grade:'A (Excellent)',date:'2024-05-20',director:'Rahul Sharma',award:'Certificate of Completion',email:'sneha@example.com',verifyUrl:'http://www.unifiedmentor.com/verify?cin=UM-2024-DS-2218',status:'active'},
+    {cin:'UM-2024-ML-3301',name:'Vikram Singh',domain:'Machine Learning',duration:'6 Months',grade:'B+ (Very Good)',date:'2024-07-01',director:'Rahul Sharma',award:'Certificate of Excellence',email:'vikram@example.com',verifyUrl:'http://www.unifiedmentor.com/verify?cin=UM-2024-ML-3301',status:'active'},
+  ];
+  saveCerts();
+}
+</script>
+</body>
+</html>
