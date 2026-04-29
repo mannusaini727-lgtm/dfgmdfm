@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unified Mentor — Certificate Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d2248;--navy2:#172f5e;--blue:#1e4db7;--accent:#4f8ef7;
+  --green:#16a34a;--green2:#dcfce7;--green3:#bbf7d0;
+  --red:#dc2626;--red2:#fee2e2;
+  --gold:#f59e0b;--gold2:#fef3c7;
+  --purple:#7c3aed;--purple2:#ede9fe;
+  --bg:#eef2f9;--card:#fff;--border:#dde5f5;
+  --text:#0d1f3d;--muted:#64748b;--light:#f8faff;
+  --r:12px;--shadow:0 4px 24px rgba(13,34,72,.11);
+}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+input,select,textarea,button{font-family:'Sora',sans-serif}
+a{text-decoration:none;color:inherit}
+
+/* ── ANIMATIONS ── */
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes checkDraw{0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}}
+@keyframes circleDraw{0%{stroke-dashoffset:400}100%{stroke-dashoffset:0}}
+@keyframes badgePop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes scanline{0%{top:-10%}100%{top:110%}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes chipGlow{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.4)}50%{box-shadow:0 0 0 8px rgba(74,222,128,0)}}
+
+/* ── PAGE SYSTEM ── */
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--navy);height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:300;box-shadow:0 2px 16px rgba(0,0,0,.3)}
+.brand{display:flex;align-items:center;gap:11px;cursor:pointer}
+.brand-icon{width:36px;height:36px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.brand-icon svg{width:26px;height:26px}
+.brand-name{font-size:15px;font-weight:800;color:#fff}
+.brand-name b{color:#7eb3ff}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.topbar-right a,.topbar-btn{color:rgba(255,255,255,.7);font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:8px;transition:.2s;cursor:pointer;border:none;background:transparent}
+.topbar-right a:hover,.topbar-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.topbar-btn.admin-btn{background:var(--gold);color:var(--navy)}
+.topbar-btn.admin-btn:hover{background:#e89e0a}
+
+/* ── BANNER ── */
+.banner{background:linear-gradient(120deg,var(--navy) 0%,#173070 55%,var(--blue) 100%);padding:52px 24px 56px;text-align:center;position:relative;overflow:hidden}
+.banner::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 50%,rgba(79,142,247,.15) 0%,transparent 60%),radial-gradient(circle at 80% 30%,rgba(255,255,255,.05) 0%,transparent 50%)}
+.chip{display:inline-flex;align-items:center;gap:7px;background:rgba(22,163,74,.18);border:1.5px solid rgba(22,163,74,.45);color:#4ade80;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:20px;animation:chipGlow 3s ease infinite}
+.banner h1{font-size:38px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px}
+.banner h1 em{color:#7eb3ff;font-style:normal}
+.banner p{color:rgba(255,255,255,.5);font-size:14px;max-width:430px;margin:0 auto;line-height:1.7}
+
+/* ── SEARCH ── */
+.search-wrap{max-width:580px;margin:-26px auto 0;padding:0 20px;position:relative;z-index:10}
+.search-box{display:flex;background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(13,34,72,.18);overflow:hidden;border:2px solid transparent;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--accent)}
+.search-box input{flex:1;border:none;outline:none;padding:16px 20px;font-size:14.5px;font-weight:600;color:var(--text);background:transparent;font-family:'JetBrains Mono',monospace}
+.search-box input::placeholder{font-family:'Sora',sans-serif;font-weight:400;color:var(--muted)}
+.search-box button{background:var(--blue);color:#fff;border:none;padding:0 26px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;white-space:nowrap}
+.search-box button:hover{background:#1a40a0}
+
+/* ── PUBLIC LAYOUT ── */
+.pub-body{max-width:980px;margin:0 auto;padding:44px 20px 72px;display:grid;grid-template-columns:1fr 355px;gap:28px;align-items:start}
+@media(max-width:760px){.pub-body{grid-template-columns:1fr}.banner h1{font-size:26px}.topbar-right a{display:none}}
+
+/* ── VERIFICATION ANIMATION OVERLAY ── */
+.verify-anim-wrap{display:none;text-align:center;padding:60px 20px;animation:fadeIn .5s ease}
+.verify-anim-wrap.show{display:block}
+.scan-box{width:200px;height:200px;border:3px solid var(--navy);border-radius:12px;margin:0 auto 28px;position:relative;overflow:hidden;background:#f8faff}
+.scan-box img{width:100%;height:100%;object-fit:cover;opacity:.3}
+.scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanline 1.5s ease-in-out infinite;top:0}
+.scan-corners::before,.scan-corners::after{content:'';position:absolute;width:20px;height:20px;border-color:var(--blue);border-style:solid}
+.scan-corners::before{top:0;left:0;border-width:3px 0 0 3px}
+.scan-corners::after{bottom:0;right:0;border-width:0 3px 3px 0}
+.verify-text{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.verify-sub{font-size:12.5px;color:var(--muted)}
+/* Check animation */
+.check-wrap{width:90px;height:90px;margin:0 auto 20px;animation:badgePop .6s cubic-bezier(.34,1.56,.64,1) both}
+.check-circle{fill:none;stroke:var(--green);stroke-width:4;stroke-dasharray:400;animation:circleDraw .7s ease forwards}
+.check-mark{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:200;stroke-dashoffset:200;animation:checkDraw .5s .5s ease forwards}
+.check-bg{fill:var(--green)}
+
+/* ── CERT PANEL ── */
+.cert-panel{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);animation:rise .6s ease both}
+.cert-panel-head{background:var(--navy);padding:15px 22px;display:flex;align-items:center;justify-content:space-between}
+.cert-panel-label{color:rgba(255,255,255,.6);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.cert-id-pill{background:rgba(79,142,247,.2);border:1px solid rgba(79,142,247,.4);color:#93c5fd;font-size:11px;font-weight:700;padding:4px 12px;border-radius:50px;font-family:'JetBrains Mono',monospace}
+.cert-img-area{padding:22px;background:#f8faff;border-bottom:1px solid var(--border)}
+.cert-img-area img{width:100%;border-radius:10px;display:block;box-shadow:0 4px 18px rgba(0,0,0,.12);transition:.35s}
+.cert-img-area img:hover{transform:scale(1.012);box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.cert-note{padding:13px 22px;font-size:11.5px;color:var(--muted)}
+
+/* ── SIDE PANEL ── */
+.side{display:flex;flex-direction:column;gap:20px;animation:rise .6s .12s ease both}
+.verified-card{background:var(--green2);border:1.5px solid var(--green3);border-radius:var(--r);padding:20px;display:flex;gap:15px;align-items:flex-start}
+.v-icon{width:44px;height:44px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(22,163,74,.35);animation:float 3s ease infinite}
+.v-text h3{font-size:14.5px;font-weight:800;color:var(--green);margin-bottom:4px}
+.v-text p{font-size:12px;color:#166534;line-height:1.6}
+.info-card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.info-head{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:14px 20px;display:flex;align-items:center;gap:10px}
+.info-head-icon{width:28px;height:28px;background:rgba(255,255,255,.1);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.info-head h3{color:#fff;font-size:13px;font-weight:700}
+.irow{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid #f1f5fb;transition:.15s}
+.irow:last-child{border-bottom:none}
+.irow:hover{background:var(--light)}
+.irow-icon{width:30px;height:30px;background:#eef2fb;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ilabel{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}
+.ivalue{font-size:13px;font-weight:700;color:var(--text)}
+.ivalue.green{color:var(--green)}
+.dl-card{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.dl-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:12px}
+.contact-card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.contact-head{background:linear-gradient(135deg,var(--blue),#2563eb);padding:14px 20px;display:flex;align-items:center;gap:9px}
+.contact-head h3{color:#fff;font-size:13px;font-weight:700}
+.clink{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid #f1f5fb;color:var(--text);transition:.15s}
+.clink:last-child{border-bottom:none}
+.clink:hover{background:var(--light)}
+.clink-icon{width:32px;height:32px;background:#eef2fb;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.clink-main{font-size:13px;font-weight:700;color:var(--blue)}
+.clink-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.not-found{text-align:center;padding:60px 20px;color:var(--muted)}
+.nf-icon{font-size:52px;margin-bottom:16px}
+.not-found h3{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+.not-found p{font-size:13px;line-height:1.7}
+
+/* ── BUTTONS ── */
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:12px 18px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;margin-bottom:8px;font-family:'Sora',sans-serif}
+.btn:last-child{margin-bottom:0}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#1a40a0;transform:translateY(-2px);box-shadow:0 8px 20px rgba(30,77,183,.3)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy2);transform:translateY(-2px);box-shadow:0 8px 20px rgba(13,34,72,.25)}
+.btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--border)}.btn-ghost:hover{background:var(--bg);border-color:var(--navy);transform:translateY(-2px)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#138d3e;transform:translateY(-2px);box-shadow:0 8px 20px rgba(22,163,74,.3)}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:#b91c1c;transform:translateY(-2px)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:#e89e0a;transform:translateY(-2px)}
+.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{background:#6d28d9;transform:translateY(-2px);box-shadow:0 8px 20px rgba(124,58,237,.3)}
+
+/* ── ADMIN LOGIN ── */
+#adminLogin{min-height:100vh;display:none;background:linear-gradient(135deg,var(--navy) 0%,#1a3a7a 60%,var(--blue) 100%);align-items:center;justify-content:center;flex-direction:column}
+#adminLogin.active{display:flex}
+.login-box{background:#fff;border-radius:18px;padding:40px 40px 36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:rise .5s ease both}
+.login-box .lb-logo{text-align:center;margin-bottom:24px}
+.login-box .lb-logo .lb-icon{width:56px;height:56px;background:var(--navy);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
+.login-box .lb-logo h2{font-size:20px;font-weight:800;color:var(--text)}
+.login-box .lb-logo p{font-size:12.5px;color:var(--muted);margin-top:3px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.form-control{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-weight:600;color:var(--text);background:#fff;transition:border-color .2s;outline:none}
+.form-control:focus{border-color:var(--accent)}
+.login-err{color:var(--red);font-size:12.5px;font-weight:600;margin-bottom:12px;display:none;background:var(--red2);padding:9px 12px;border-radius:8px}
+.login-back{text-align:center;margin-top:16px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.login-back span{color:var(--blue);font-weight:700}.login-back span:hover{text-decoration:underline}
+
+/* ── ADMIN DASH ── */
+#adminDash{background:#f0f4fc;min-height:100vh}
+#adminDash.active{display:block}
+.admin-topbar{background:var(--navy);height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;box-shadow:0 2px 16px rgba(0,0,0,.3);position:sticky;top:0;z-index:200}
+.admin-topbar-left{display:flex;align-items:center;gap:14px}
+.admin-topbar-left h1{color:#fff;font-size:15px;font-weight:800}
+.admin-topbar-left span{color:#7eb3ff;font-size:12px;background:rgba(79,142,247,.2);padding:3px 10px;border-radius:50px;border:1px solid rgba(79,142,247,.3)}
+.admin-topbar-right{display:flex;align-items:center;gap:8px}
+.logout-btn{color:rgba(255,255,255,.6);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;border:none;background:transparent;transition:.2s}
+.logout-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.admin-layout{display:flex;min-height:calc(100vh - 62px)}
+.admin-sidebar{width:230px;background:var(--navy2);flex-shrink:0;padding:24px 0;display:flex;flex-direction:column;gap:2px}
+.sidebar-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.3);padding:10px 20px 4px}
+.sidebar-item{display:flex;align-items:center;gap:11px;padding:11px 20px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;border-left:3px solid transparent}
+.sidebar-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sidebar-item.active{background:rgba(79,142,247,.15);color:#7eb3ff;border-left-color:#4f8ef7}
+.si-icon{font-size:16px;width:20px;text-align:center}
+.admin-content{flex:1;padding:32px 28px;overflow-y:auto}
+.admin-tab{display:none}
+.admin-tab.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.stat-icon{font-size:26px;margin-bottom:10px}
+.stat-num{font-size:28px;font-weight:800;color:var(--text)}
+.stat-label{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sec-head h2{font-size:18px;font-weight:800;color:var(--text)}
+.sec-head p{font-size:12.5px;color:var(--muted);margin-top:3px}
+.table-wrap{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.tbl-toolbar{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tbl-search{flex:1;min-width:180px;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;outline:none;transition:.2s}
+.tbl-search:focus{border-color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--light)}
+th{padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border)}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #f1f5fb;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--light)}
+.badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700}
+.badge-green{background:var(--green2);color:var(--green)}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-gold{background:var(--gold2);color:#92400e}
+.tbl-actions{display:flex;gap:5px;flex-wrap:wrap}
+.tbl-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:.2s;font-family:'Sora',sans-serif}
+.tbl-btn-blue{background:#dbeafe;color:#1d4ed8}.tbl-btn-blue:hover{background:#bfdbfe}
+.tbl-btn-red{background:var(--red2);color:var(--red)}.tbl-btn-red:hover{background:#fecaca}
+.tbl-btn-purple{background:var(--purple2);color:var(--purple)}.tbl-btn-purple:hover{background:#ddd6fe}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:rise .3s ease both}
+.modal-head{background:var(--navy);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:1}
+.modal-head h3{color:#fff;font-size:15px;font-weight:800}
+.modal-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:30px;height:30px;border-radius:8px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.modal-close:hover{background:rgba(255,255,255,.2)}
+.modal-body{padding:24px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-row.single{grid-template-columns:1fr}
+.form-group-m label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.form-group-m .form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:13.5px;font-weight:500;color:var(--text);outline:none;transition:.2s}
+.form-group-m .form-control:focus{border-color:var(--accent)}
+.modal-footer{padding:0 24px 24px;display:flex;gap:12px;justify-content:flex-end}
+.modal-footer .btn{width:auto;padding:11px 24px;margin:0}
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:.2s;background:var(--light)}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:#f0f7ff}
+.uz-icon{font-size:32px;margin-bottom:10px}
+.upload-preview{margin-top:14px;display:none}
+.upload-preview img{max-width:100%;border-radius:8px;max-height:200px;object-fit:contain}
+.cert-canvas-wrap{background:#f8faff;border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-bottom:12px}
+#certCanvas{width:100%;display:block}
+.settings-section{background:#fff;border-radius:var(--r);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
+.settings-section h3{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
+.settings-section p{font-size:12.5px;color:var(--muted);margin-bottom:20px}
+.pass-strength{height:4px;border-radius:2px;margin-top:6px;transition:.3s;background:var(--border)}
+.pass-strength.weak{background:var(--red);width:33%}
+.pass-strength.medium{background:var(--gold);width:66%}
+.pass-strength.strong{background:var(--green);width:100%}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+.es-icon{font-size:44px;margin-bottom:12px}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:12px 24px;border-radius:50px;font-size:13px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.2);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:9999;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--red)}
+.footer{background:var(--navy);color:rgba(255,255,255,.4);text-align:center;padding:22px 20px;font-size:12px;line-height:1.8}
+.footer a{color:#7eb3ff}
+#qrHidden{position:absolute;left:-9999px;top:-9999px;width:120px;height:120px}
+#qrHidden canvas,#qrHidden img{width:120px!important;height:120px!important}
+</style>
+</head>
+<body>
+
+<!-- ══════ PUBLIC PAGE ══════ -->
+<div id="publicPage" class="page active">
+  <header class="topbar">
+    <div class="brand" onclick="goPublic()">
+      <div class="brand-icon"><svg viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="6" fill="#0d2248"/><path d="M6 7L6 25L12 25L18 14L24 25L30 25L30 7L24 7L24 18L18 9L12 18L12 7Z" fill="#4f8ef7"/></svg></div>
+      <span class="brand-name">Unified <b>Mentor</b></span>
+    </div>
+    <div class="topbar-right">
+      <a href="https://unifiedmentor.com/" target="_blank">Home</a>
+      <a href="https://unifiedmentor.com/about" target="_blank">About</a>
+      <a href="https://unifiedmentor.com/contact-us" target="_blank">Contact</a>
+      <button class="topbar-btn admin-btn" onclick="showAdminLogin()">🔐 Admin</button>
+    </div>
+  </header>
+
+  <div class="banner">
+    <div class="chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg> Verified Portal</div>
+    <h1>Certificate<br><em>Verification System</em></h1>
+    <p>Enter a Certificate ID to instantly verify any internship certificate issued by Unified Mentor Pvt Ltd.</p>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Enter Certificate ID  e.g. UMID0201267746" onkeydown="if(event.key==='Enter')verifyCert()">
+      <button onclick="verifyCert()">🔍 Verify</button>
+    </div>
+  </div>
+
+  <!-- Scanning animation -->
+  <div id="scanAnim" class="verify-anim-wrap" style="max-width:420px;margin:40px auto 0;padding:40px 20px">
+    <div class="scan-box scan-corners">
+      <div class="scan-line"></div>
+    </div>
+    <div class="verify-text">Scanning Certificate ID…</div>
+    <div class="verify-sub">Please wait while we verify your certificate</div>
+  </div>
+
+  <!-- Results -->
+  <div id="pubResults" style="display:none">
+    <!-- Success check animation -->
+    <div style="text-align:center;padding:40px 20px 0;max-width:400px;margin:0 auto" id="checkAnim">
+      <svg class="check-wrap" viewBox="0 0 100 100">
+        <circle class="check-bg" cx="50" cy="50" r="46"/>
+        <circle class="check-circle" cx="50" cy="50" r="46" stroke-dasharray="400"/>
+        <polyline class="check-mark" points="28,52 44,68 72,34"/>
+      </svg>
+      <div style="font-size:18px;font-weight:800;color:var(--green);margin-bottom:6px">Certificate Verified!</div>
+      <div style="font-size:13px;color:var(--muted)">Authentic certificate from Unified Mentor Pvt Ltd</div>
+    </div>
+    <div class="pub-body">
+      <div class="cert-panel">
+        <div class="cert-panel-head">
+          <span class="cert-panel-label">📄 Internship Certificate</span>
+          <span class="cert-id-pill" id="dispCertId">—</span>
+        </div>
+        <div class="cert-img-area"><img id="certDisplayImg" src="" alt="Certificate"></div>
+        <div class="cert-note">🔒 Officially issued & verified by Unified Mentor Pvt Ltd · ISO 9001:2015 Certified</div>
+      </div>
+      <div class="side">
+        <div class="verified-card">
+          <div class="v-icon">✓</div>
+          <div class="v-text"><h3>✅ Certificate Verified</h3><p>Authentic certificate officially issued by <strong>Unified Mentor Pvt Ltd</strong>.</p></div>
+        </div>
+        <div class="info-card">
+          <div class="info-head"><div class="info-head-icon">📋</div><h3>Certificate Details</h3></div>
+          <div class="irow"><div class="irow-icon">🪪</div><div><div class="ilabel">Certificate ID</div><div class="ivalue" id="dCertId">—</div></div></div>
+          <div class="irow"><div class="irow-icon">👤</div><div><div class="ilabel">Candidate Name</div><div class="ivalue" id="dName">—</div></div></div>
+          <div class="irow"><div class="irow-icon">💻</div><div><div class="ilabel">Domain</div><div class="ivalue" id="dDomain">—</div></div></div>
+          <div class="irow"><div class="irow-icon">📅</div><div><div class="ilabel">Period</div><div class="ivalue" id="dPeriod">—</div></div></div>
+          <div class="irow"><div class="irow-icon">⏱</div><div><div class="ilabel">Duration</div><div class="ivalue" id="dDuration">—</div></div></div>
+          <div class="irow"><div class="irow-icon">📆</div><div><div class="ilabel">Issue Date</div><div class="ivalue" id="dIssued">—</div></div></div>
+          <div class="irow"><div class="irow-icon">✅</div><div><div class="ilabel">Status</div><div class="ivalue green" id="dStatus">—</div></div></div>
+        </div>
+        <div class="dl-card">
+          <div class="dl-title">⬇ Download Certificate</div>
+          <button class="btn btn-blue" onclick="downloadCert()">🖼 Download Certificate (PNG)</button>
+          <a href="https://www.unifiedmentor.com" target="_blank" class="btn btn-ghost">🌐 Visit unifiedmentor.com</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-head"><span>📞</span><h3>Contact / Verify Directly</h3></div>
+          <a href="https://www.unifiedmentor.com" target="_blank" class="clink"><div class="clink-icon">🌐</div><div><div class="clink-main">www.unifiedmentor.com</div><div class="clink-sub">Official Website</div></div></a>
+          <a href="https://unifiedmentor.com/contact-us" target="_blank" class="clink"><div class="clink-icon">✉️</div><div><div class="clink-main">Contact Form</div><div class="clink-sub">unifiedmentor.com/contact-us</div></div></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pubNotFound" style="display:none">
+    <div style="max-width:500px;margin:60px auto;padding:0 20px">
+      <div class="not-found"><div class="nf-icon">🔍</div><h3>Certificate Not Found</h3><p>No certificate with this ID. Contact Unified Mentor at <a href="https://unifiedmentor.com/contact-us" target="_blank" style="color:var(--blue)">unifiedmentor.com/contact-us</a></p></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>System-generated certificate verification · <a href="https://www.unifiedmentor.com" target="_blank">www.unifiedmentor.com</a></p>
+    <p>© 2026 Unified Mentor Pvt Ltd · CIN: U85500HR2023PTC115118 · ISO 9001:2015 Certified</p>
+  </footer>
+</div>
+
+<!-- ══════ ADMIN LOGIN ══════ -->
+<div id="adminLogin" class="page">
+  <div class="login-box">
+    <div class="lb-logo">
+      <div class="lb-icon"><svg viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="6" fill="#0d2248"/><path d="M6 7L6 25L12 25L18 14L24 25L30 25L30 7L24 7L24 18L18 9L12 18L12 7Z" fill="#4f8ef7"/></svg></div>
+      <h2>Admin Portal</h2><p>Unified Mentor Certificate Management</p>
+    </div>
+    <div class="form-group"><label>Username</label><input type="text" class="form-control" id="loginUser" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label>Password</label><input type="password" class="form-control" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-err" id="loginErr">❌ Invalid username or password</div>
+    <button class="btn btn-navy" style="width:100%;margin-top:4px" onclick="doLogin()">🔐 Login to Admin Panel</button>
+    <div class="login-back" onclick="goPublic()">← Back to <span>Public Portal</span></div>
+  </div>
+</div>
+
+<!-- ══════ ADMIN DASHBOARD ══════ -->
+<div id="adminDash" class="page">
+  <header class="admin-topbar">
+    <div class="admin-topbar-left"><h1>🛡 Admin Dashboard</h1><span id="adminWelcome">Unified Mentor</span></div>
+    <div class="admin-topbar-right">
+      <button class="logout-btn" onclick="goPublic()">👁 Public Portal</button>
+      <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </header>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-section-label">Main</div>
+      <div class="sidebar-item active" onclick="switchTab('dashboard',this)"><span class="si-icon">📊</span> Dashboard</div>
+      <div class="sidebar-item" onclick="switchTab('certificates',this)"><span class="si-icon">📄</span> All Certificates</div>
+      <div class="sidebar-item" onclick="switchTab('add',this)"><span class="si-icon">➕</span> Add Certificate</div>
+      <div class="sidebar-section-label" style="margin-top:8px">Generate</div>
+      <div class="sidebar-item" onclick="switchTab('autocert',this)"><span class="si-icon">🎨</span> Auto-Generate Cert</div>
+      <div class="sidebar-item" onclick="switchTab('genid',this)"><span class="si-icon">⚡</span> Generate ID</div>
+      <div class="sidebar-section-label" style="margin-top:8px">Tools</div>
+      <div class="sidebar-item" onclick="switchTab('verify',this)"><span class="si-icon">🔍</span> Verify Lookup</div>
+      <div class="sidebar-section-label" style="margin-top:8px">Admin</div>
+      <div class="sidebar-item" onclick="switchTab('settings',this)"><span class="si-icon">⚙️</span> Settings & Password</div>
+    </aside>
+
+    <main class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="admin-tab active" id="tab-dashboard">
+        <div class="sec-head"><div><h2>Overview</h2><p>Summary of all certificates</p></div></div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-icon">📄</div><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Certificates</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-num" id="statCompleted">0</div><div class="stat-label">Completed</div></div>
+          <div class="stat-card"><div class="stat-icon">💻</div><div class="stat-num" id="statDomains">0</div><div class="stat-label">Domains Covered</div></div>
+          <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-num" id="statThisMonth">0</div><div class="stat-label">Added This Month</div></div>
+        </div>
+        <div class="sec-head" style="margin-top:4px"><div><h2>Recent Certificates</h2><p>Last 5 entries</p></div></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Cert ID</th><th>Name</th><th>Domain</th><th>Status</th><th>Issue Date</th></tr></thead>
+          <tbody id="recentTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ALL CERTS -->
+      <div class="admin-tab" id="tab-certificates">
+        <div class="sec-head">
+          <div><h2>All Certificates</h2><p>Manage, view & delete</p></div>
+          <button class="btn btn-green" style="width:auto;padding:10px 20px;margin:0" onclick="switchTab('add',document.querySelectorAll('.sidebar-item')[2])">➕ Add New</button>
+        </div>
+        <div class="table-wrap">
+          <div class="tbl-toolbar"><input type="text" class="tbl-search" placeholder="🔍 Search by name, ID or domain…" oninput="filterTable(this.value)"></div>
+          <table><thead><tr><th>Cert ID</th><th>Candidate</th><th>Domain</th><th>Duration</th><th>Status</th><th>Issued</th><th>Actions</th></tr></thead>
+          <tbody id="allCertsTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ADD CERT -->
+      <div class="admin-tab" id="tab-add">
+        <div class="sec-head"><div><h2>Add / Upload Certificate</h2><p>Fill in details and upload certificate image</p></div></div>
+        <div style="background:#fff;border-radius:var(--r);padding:28px;box-shadow:var(--shadow)">
+          <div class="form-row">
+            <div class="form-group-m"><label>Certificate ID *</label><input type="text" class="form-control" id="addId" placeholder="e.g. UMID0201267746"></div>
+            <div class="form-group-m"><label>Candidate Full Name *</label><input type="text" class="form-control" id="addName" placeholder="e.g. Tamana Dagar"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group-m">
+              <label>Domain / Role *</label>
+              <select class="form-control" id="addDomain" onchange="toggleCustom(this,'addCustomWrap')">
+                <option value="">— Select Domain —</option>
+                <option>Web Development Intern</option><option>Data Analysis Intern</option>
+                <option>Digital Marketing Intern</option><option>Machine Learning Intern</option>
+                <option>UI/UX Design Intern</option><option>Python Development Intern</option>
+                <option>Java Development Intern</option><option>Android Development Intern</option>
+                <option>Cybersecurity Intern</option><option>Cloud Computing Intern</option>
+                <option value="__custom__">Other (custom)…</option>
+              </select>
+            </div>
+            <div class="form-group-m" id="addCustomWrap" style="display:none"><label>Custom Domain</label><input type="text" class="form-control" id="addDomainCustom" placeholder="Enter custom domain"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group-m"><label>Start Date *</label><input type="date" class="form-control" id="addStart"></div>
+            <div class="form-group-m"><label>End Date *</label><input type="date" class="form-control" id="addEnd"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group-m"><label>Duration</label>
+              <select class="form-control" id="addDuration">
+                <option>1 Month</option><option>4 Weeks (Evening Shift)</option><option>6 Weeks</option><option>2 Months</option><option>3 Months</option><option>6 Months</option>
+              </select>
+            </div>
+            <div class="form-group-m"><label>Status</label>
+              <select class="form-control" id="addStatus"><option>Completed</option><option>In Progress</option><option>Pending</option></select>
+            </div>
+          </div>
+          <div class="form-row single"><div class="form-group-m"><label>Issue Date *</label><input type="date" class="form-control" id="addIssued"></div></div>
+          <div class="form-row single">
+            <div class="form-group-m">
+              <label>Upload Certificate Image (PNG/JPG)</label>
+              <div class="upload-zone" id="uploadZone" onclick="document.getElementById('certFileInput').click()" ondragover="dragO(event,'uploadZone')" ondragleave="dragL('uploadZone')" ondrop="dropF(event,'certFileInput','uploadZone','uploadPreview','uploadedImg')">
+                <div class="uz-icon">📤</div><p>Click or <strong>drag & drop</strong> certificate image</p>
+                <p style="font-size:11px;margin-top:4px;color:#94a3b8">PNG, JPG supported</p>
+              </div>
+              <div class="upload-preview" id="uploadPreview"><img id="uploadedImg" src="" alt="Preview"></div>
+              <input type="file" id="certFileInput" accept="image/*" style="display:none" onchange="handleFile(this,'uploadPreview','uploadedImg','uploadZone')">
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px">
+            <button class="btn btn-green" style="flex:1" onclick="addCertificate()">💾 Save Certificate</button>
+            <button class="btn btn-ghost" style="width:auto;padding:12px 24px;margin:0" onclick="clearAddForm()">🗑 Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUTO-GENERATE CERT -->
+      <div class="admin-tab" id="tab-autocert">
+        <div class="sec-head"><div><h2>🎨 Auto-Generate Certificate</h2><p>Professional Unified Mentor certificate with QR code, signatures, ISO logo & domain-specific text</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 460px;gap:24px;align-items:start">
+          <div style="background:#fff;border-radius:var(--r);padding:28px;box-shadow:var(--shadow)">
+            <div class="form-row">
+              <div class="form-group-m"><label>Candidate Full Name *</label><input type="text" class="form-control" id="gcName" placeholder="e.g. Tamana Dagar" oninput="livePreview()"></div>
+              <div class="form-group-m"><label>Certificate ID (auto if blank)</label><input type="text" class="form-control" id="gcId" placeholder="Auto-generated" oninput="livePreview()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group-m">
+                <label>Domain / Role *</label>
+                <select class="form-control" id="gcDomain" onchange="toggleCustom(this,'gcCustomWrap');livePreview()">
+                  <option value="">— Select Domain —</option>
+                  <option>Web Development Intern</option><option>Data Analysis Intern</option>
+                  <option>Digital Marketing Intern</option><option>Machine Learning Intern</option>
+                  <option>UI/UX Design Intern</option><option>Python Development Intern</option>
+                  <option>Java Development Intern</option><option>Android Development Intern</option>
+                  <option>Cybersecurity Intern</option><option>Cloud Computing Intern</option>
+                  <option value="__custom__">Other (custom)…</option>
+                </select>
+              </div>
+              <div class="form-group-m" id="gcCustomWrap" style="display:none"><label>Custom Domain</label><input type="text" class="form-control" id="gcDomainCustom" placeholder="Enter domain" oninput="livePreview()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group-m"><label>Start Date *</label><input type="date" class="form-control" id="gcStart" oninput="livePreview()"></div>
+              <div class="form-group-m"><label>End Date *</label><input type="date" class="form-control" id="gcEnd" oninput="livePreview()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group-m"><label>Duration</label>
+                <select class="form-control" id="gcDuration" onchange="livePreview()">
+                  <option>1 Month</option><option>4 Weeks (Evening Shift)</option><option>6 Weeks</option><option>2 Months</option><option>3 Months</option><option>6 Months</option>
+                </select>
+              </div>
+              <div class="form-group-m"><label>Issue Date *</label><input type="date" class="form-control" id="gcIssued" oninput="livePreview()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group-m"><label>Director Name</label><input type="text" class="form-control" id="gcDirector" value="Paras Grover" oninput="livePreview()"></div>
+              <div class="form-group-m"><label>Awarded By</label><input type="text" class="form-control" id="gcAwarded" value="Sanket Patil" oninput="livePreview()"></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:8px">
+              <button class="btn btn-purple" style="flex:1" onclick="generateCertificate()">🎨 Generate & Save</button>
+              <button class="btn btn-gold" style="width:auto;padding:12px 20px;margin:0" onclick="downloadGeneratedCert()">⬇ Download PNG</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px">📋 Live Preview</div>
+            <div class="cert-canvas-wrap"><canvas id="certCanvas" width="960" height="680"></canvas></div>
+            <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">Preview updates as you type • QR links to verification page</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- GENERATE ID -->
+      <div class="admin-tab" id="tab-genid">
+        <div class="sec-head"><div><h2>Generate Certificate ID</h2><p>Create unique IDs in UMID format</p></div></div>
+        <div style="background:#fff;border-radius:var(--r);padding:28px;box-shadow:var(--shadow)">
+          <button class="btn btn-blue" style="width:auto;padding:12px 28px;margin-bottom:24px" onclick="genId()">⚡ Generate New ID</button>
+          <div id="genResult" style="display:none">
+            <div style="background:var(--light);border-radius:10px;padding:24px;border:1.5px solid var(--border);text-align:center">
+              <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Generated Certificate ID</div>
+              <div id="genIdText" style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:16px"></div>
+              <div style="display:flex;gap:10px;justify-content:center">
+                <button class="btn btn-navy" style="width:auto;padding:9px 20px;margin:0" onclick="copyId()">📋 Copy ID</button>
+                <button class="btn btn-blue" style="width:auto;padding:9px 20px;margin:0" onclick="useIdInForm()">➕ Use in Add Form</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VERIFY LOOKUP -->
+      <div class="admin-tab" id="tab-verify">
+        <div class="sec-head"><div><h2>Certificate Lookup</h2><p>Quickly check any certificate by ID</p></div></div>
+        <div style="background:#fff;border-radius:var(--r);padding:28px;box-shadow:var(--shadow)">
+          <div style="display:flex;gap:12px;margin-bottom:24px">
+            <input type="text" class="form-control" id="adminSearchInput" placeholder="Enter Certificate ID…" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:14px" onkeydown="if(event.key==='Enter')adminLookup()">
+            <button class="btn btn-blue" style="width:auto;padding:11px 24px;margin:0" onclick="adminLookup()">🔍 Lookup</button>
+          </div>
+          <div id="adminLookupResult"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="admin-tab" id="tab-settings">
+        <div class="sec-head"><div><h2>⚙️ Settings & Security</h2><p>Change admin credentials</p></div></div>
+        <div class="settings-section">
+          <h3>👤 Change Admin Username</h3><p>Update the username used to login.</p>
+          <div class="form-row">
+            <div class="form-group-m"><label>Current Username</label><input type="text" class="form-control" id="curUsername" placeholder="Current username"></div>
+            <div class="form-group-m"><label>New Username</label><input type="text" class="form-control" id="newUsername" placeholder="New username"></div>
+          </div>
+          <div class="form-row single"><div class="form-group-m"><label>Confirm with Current Password</label><input type="password" class="form-control" id="usernameConfirmPass" placeholder="Current password"></div></div>
+          <button class="btn btn-blue" style="width:auto;padding:11px 24px;margin:0" onclick="changeUsername()">💾 Update Username</button>
+        </div>
+        <div class="settings-section">
+          <h3>🔐 Change Admin Password</h3><p>Choose a strong password with at least 8 characters.</p>
+          <div class="form-row single"><div class="form-group-m"><label>Current Password</label><input type="password" class="form-control" id="curPass" placeholder="Enter current password"></div></div>
+          <div class="form-row">
+            <div class="form-group-m"><label>New Password</label><input type="password" class="form-control" id="newPass" placeholder="Min 8 characters" oninput="checkStrength(this.value)"><div class="pass-strength" id="passBar"></div><div id="passLbl" style="font-size:11px;color:var(--muted);margin-top:4px"></div></div>
+            <div class="form-group-m"><label>Confirm New Password</label><input type="password" class="form-control" id="confirmPass" placeholder="Repeat new password"></div>
+          </div>
+          <button class="btn btn-green" style="width:auto;padding:11px 24px;margin:0" onclick="changePassword()">🔐 Update Password</button>
+        </div>
+        <div class="settings-section" style="border:1.5px solid #fecaca">
+          <h3 style="color:var(--red)">⚠️ Danger Zone</h3><p>These actions are irreversible.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-red" style="width:auto;padding:11px 22px;margin:0" onclick="resetAllData()">🗑 Clear All Certificates</button>
+            <button class="btn btn-ghost" style="width:auto;padding:11px 22px;margin:0;border-color:#fecaca;color:var(--red)" onclick="resetCredentials()">🔄 Reset Default Credentials</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL: VIEW CERT -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div class="modal-head"><h3>📄 Certificate Details</h3><button class="modal-close" onclick="closeModal('viewModal')">✕</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:20px;border-radius:10px;overflow:hidden"><img id="modalCertImg" src="" alt="Certificate" style="width:100%;display:block"></div>
+      <div class="info-card" style="box-shadow:none;border:1px solid var(--border)">
+        <div class="irow"><div class="irow-icon">🪪</div><div><div class="ilabel">Certificate ID</div><div class="ivalue" id="mCertId">—</div></div></div>
+        <div class="irow"><div class="irow-icon">👤</div><div><div class="ilabel">Name</div><div class="ivalue" id="mName">—</div></div></div>
+        <div class="irow"><div class="irow-icon">💻</div><div><div class="ilabel">Domain</div><div class="ivalue" id="mDomain">—</div></div></div>
+        <div class="irow"><div class="irow-icon">📅</div><div><div class="ilabel">Period</div><div class="ivalue" id="mPeriod">—</div></div></div>
+        <div class="irow"><div class="irow-icon">⏱</div><div><div class="ilabel">Duration</div><div class="ivalue" id="mDuration">—</div></div></div>
+        <div class="irow"><div class="irow-icon">✅</div><div><div class="ilabel">Status</div><div class="ivalue green" id="mStatus">—</div></div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-blue" style="width:auto;padding:10px 20px;margin:0" onclick="dlFromModal()">⬇ Download PNG</button>
+      <button class="btn btn-ghost" style="width:auto;padding:10px 20px;margin:0" onclick="closeModal('viewModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden QR div -->
+<div id="qrHidden"></div>
+
+<div class="toast" id="toast">✓ Done!</div>
+
+<script>
+/* ════════════════════════════════════
+   DATA
+════════════════════════════════════ */
+function getCreds(){ try{ return JSON.parse(localStorage.getItem('um_creds')||'null')||{user:'admin',pass:'um@2026'}; }catch(e){ return {user:'admin',pass:'um@2026'}; } }
+function saveCreds(c){ localStorage.setItem('um_creds',JSON.stringify(c)); }
+function loadCerts(){ try{ return JSON.parse(localStorage.getItem('um_certs')||'[]'); }catch(e){ return []; } }
+function saveCerts(c){ localStorage.setItem('um_certs',JSON.stringify(c)); }
+
+// Seed
+(function(){
+  if(!loadCerts().length){
+    saveCerts([{id:'UMID0201267746',name:'Tamana Dagar',domain:'Web Development Intern',start:'2026-10-01',end:'2026-10-02',duration:'1 Month (Evening Shift)',status:'Completed',issued:'2026-10-02',img:'Tamana_Yadav-7.png'}]);
+  }
+})();
+
+/* ════════════════════════════════════
+   ROUTING
+════════════════════════════════════ */
+function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function goPublic(){ showPage('publicPage'); }
+function showAdminLogin(){ showPage('adminLogin'); document.getElementById('loginUser').value=''; document.getElementById('loginPass').value=''; document.getElementById('loginErr').style.display='none'; }
+
+/* ════════════════════════════════════
+   AUTH
+════════════════════════════════════ */
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const c=getCreds();
+  if(u===c.user&&p===c.pass){
+    document.getElementById('loginErr').style.display='none';
+    showPage('adminDash');
+    document.getElementById('adminWelcome').textContent='Welcome, '+u;
+    refreshDashboard();
+  } else { document.getElementById('loginErr').style.display='block'; }
+}
+function doLogout(){ showPage('publicPage'); }
+
+/* ════════════════════════════════════
+   SETTINGS
+════════════════════════════════════ */
+function changeUsername(){
+  const cur=document.getElementById('curUsername').value.trim();
+  const nw=document.getElementById('newUsername').value.trim();
+  const pass=document.getElementById('usernameConfirmPass').value;
+  const c=getCreds();
+  if(cur!==c.user){ toast('Current username incorrect','error'); return; }
+  if(pass!==c.pass){ toast('Password confirmation failed','error'); return; }
+  if(!nw){ toast('New username cannot be empty','error'); return; }
+  c.user=nw; saveCreds(c);
+  document.getElementById('adminWelcome').textContent='Welcome, '+nw;
+  ['curUsername','newUsername','usernameConfirmPass'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Username updated: '+nw);
+}
+function checkStrength(v){
+  const bar=document.getElementById('passBar'),lbl=document.getElementById('passLbl');
+  if(!v){bar.className='pass-strength';lbl.textContent='';return;}
+  let s=0;if(v.length>=8)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+  if(s<=1){bar.className='pass-strength weak';lbl.textContent='Weak';lbl.style.color='var(--red)';}
+  else if(s<=2){bar.className='pass-strength medium';lbl.textContent='Medium';lbl.style.color='var(--gold)';}
+  else{bar.className='pass-strength strong';lbl.textContent='Strong ✓';lbl.style.color='var(--green)';}
+}
+function changePassword(){
+  const cur=document.getElementById('curPass').value;
+  const nw=document.getElementById('newPass').value;
+  const conf=document.getElementById('confirmPass').value;
+  const c=getCreds();
+  if(cur!==c.pass){toast('Current password incorrect','error');return;}
+  if(nw.length<8){toast('Min 8 characters required','error');return;}
+  if(nw!==conf){toast('Passwords do not match','error');return;}
+  c.pass=nw; saveCreds(c);
+  ['curPass','newPass','confirmPass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('passBar').className='pass-strength';
+  document.getElementById('passLbl').textContent='';
+  toast('🔐 Password updated!');
+}
+function resetCredentials(){ if(!confirm('Reset to default? admin / um@2026')) return; saveCreds({user:'admin',pass:'um@2026'}); toast('Credentials reset'); }
+function resetAllData(){ if(!confirm('Delete ALL certificates?')) return; saveCerts([]); refreshDashboard(); renderAllCerts(); toast('All cleared'); }
+
+/* ════════════════════════════════════
+   PUBLIC VERIFY
+════════════════════════════════════ */
+function verifyCert(){
+  const q=document.getElementById('searchInput').value.trim().toUpperCase();
+  const cert=loadCerts().find(c=>c.id.toUpperCase()===q);
+  document.getElementById('pubResults').style.display='none';
+  document.getElementById('pubNotFound').style.display='none';
+  document.getElementById('scanAnim').classList.remove('show');
+  if(!q) return;
+
+  // Show scan animation
+  document.getElementById('scanAnim').classList.add('show');
+
+  setTimeout(()=>{
+    document.getElementById('scanAnim').classList.remove('show');
+    if(cert){
+      document.getElementById('pubResults').style.display='block';
+      document.getElementById('dispCertId').textContent=cert.id;
+      document.getElementById('certDisplayImg').src=cert.img||'';
+      document.getElementById('dCertId').textContent=cert.id;
+      document.getElementById('dName').textContent=cert.name;
+      document.getElementById('dDomain').textContent=cert.domain;
+      document.getElementById('dPeriod').textContent=fmt(cert.start)+' – '+fmt(cert.end);
+      document.getElementById('dDuration').textContent=cert.duration;
+      document.getElementById('dIssued').textContent=fmt(cert.issued);
+      document.getElementById('dStatus').textContent=cert.status;
+      window._pubCert=cert;
+      document.getElementById('checkAnim').style.animation='none';
+      void document.getElementById('checkAnim').offsetWidth;
+      document.getElementById('checkAnim').style.animation='rise .5s ease both';
+    } else {
+      document.getElementById('pubNotFound').style.display='block';
+    }
+  }, 2000);
+}
+
+function downloadCert(){
+  const cert=window._pubCert; if(!cert) return;
+  const link=document.createElement('a');
+  link.href=cert.img; link.download=(cert.name||'Certificate').replace(/ /g,'_')+'_Certificate.png';
+  link.click(); toast('Download started!');
+}
+
+/* ════════════════════════════════════
+   ADMIN TABS
+════════════════════════════════════ */
+function switchTab(name,el){
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+  if(name==='certificates') renderAllCerts();
+  if(name==='autocert'){ if(!document.getElementById('gcId').value) document.getElementById('gcId').value='UMID'+Math.floor(10000000000+Math.random()*90000000000); livePreview(); }
+}
+
+/* ════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════ */
+function refreshDashboard(){
+  const certs=loadCerts();
+  document.getElementById('statTotal').textContent=certs.length;
+  document.getElementById('statCompleted').textContent=certs.filter(c=>c.status==='Completed').length;
+  document.getElementById('statDomains').textContent=new Set(certs.map(c=>c.domain)).size;
+  const now=new Date(),tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  document.getElementById('statThisMonth').textContent=certs.filter(c=>(c.issued||'').startsWith(tm)).length;
+  const tbody=document.getElementById('recentTable');
+  const recent=[...certs].reverse().slice(0,5);
+  tbody.innerHTML=recent.length?recent.map(c=>`<tr><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">${c.id}</span></td><td style="font-weight:600">${c.name}</td><td>${c.domain}</td><td><span class="badge badge-green">${c.status}</span></td><td style="color:var(--muted);font-size:12px">${fmt(c.issued)}</td></tr>`).join(''):`<tr><td colspan="5"><div class="empty-state"><div class="es-icon">📭</div><p>No certificates yet</p></div></td></tr>`;
+}
+
+let _fq='';
+function renderAllCerts(q=''){
+  const certs=loadCerts().filter(c=>{ if(!q) return true; const l=q.toLowerCase(); return c.id.toLowerCase().includes(l)||c.name.toLowerCase().includes(l)||c.domain.toLowerCase().includes(l); });
+  const tbody=document.getElementById('allCertsTable');
+  tbody.innerHTML=certs.length?certs.map(c=>`<tr>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">${c.id}</span></td>
+    <td style="font-weight:600">${c.name}</td><td>${c.domain}</td>
+    <td style="font-size:12px;color:var(--muted)">${c.duration}</td>
+    <td><span class="badge ${c.status==='Completed'?'badge-green':c.status==='In Progress'?'badge-blue':'badge-gold'}">${c.status}</span></td>
+    <td style="font-size:12px;color:var(--muted)">${fmt(c.issued)}</td>
+    <td><div class="tbl-actions">
+      <button class="tbl-btn tbl-btn-blue" onclick="viewCert('${c.id}')">👁 View</button>
+      <button class="tbl-btn tbl-btn-purple" onclick="regenCert('${c.id}')">🎨 Regen</button>
+      <button class="tbl-btn tbl-btn-red" onclick="deleteCert('${c.id}')">🗑 Del</button>
+    </div></td></tr>`).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="es-icon">📭</div><p>No certificates found</p></div></td></tr>`;
+}
+function filterTable(v){ _fq=v; renderAllCerts(v); }
+
+/* ════════════════════════════════════
+   ADD CERT
+════════════════════════════════════ */
+let _uploadedImg='';
+function toggleCustom(sel,wrapId){ document.getElementById(wrapId).style.display=sel.value==='__custom__'?'block':'none'; }
+function handleFile(input,prevId,imgId,zoneId){
+  const file=input.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{ _uploadedImg=e.target.result; document.getElementById(imgId).src=_uploadedImg; document.getElementById(prevId).style.display='block'; document.getElementById(zoneId).style.display='none'; };
+  r.readAsDataURL(file);
+}
+function dragO(e,id){ e.preventDefault(); document.getElementById(id).classList.add('drag-over'); }
+function dragL(id){ document.getElementById(id).classList.remove('drag-over'); }
+function dropF(e,inp,zone,prev,img){ e.preventDefault(); dragL(zone); const f=e.dataTransfer.files[0]; if(!f) return; const dt=new DataTransfer(); dt.items.add(f); const el=document.getElementById(inp); el.files=dt.files; handleFile(el,prev,img,zone); }
+
+function addCertificate(){
+  const id=document.getElementById('addId').value.trim();
+  const name=document.getElementById('addName').value.trim();
+  let domain=document.getElementById('addDomain').value;
+  if(domain==='__custom__') domain=document.getElementById('addDomainCustom').value.trim();
+  const start=document.getElementById('addStart').value,end=document.getElementById('addEnd').value;
+  const duration=document.getElementById('addDuration').value,status=document.getElementById('addStatus').value;
+  const issued=document.getElementById('addIssued').value;
+  if(!id||!name||!domain||!start||!end||!issued){ toast('Fill all required (*) fields','error'); return; }
+  const certs=loadCerts();
+  if(certs.find(c=>c.id===id)){ toast('Certificate ID already exists!','error'); return; }
+  certs.push({id,name,domain,start,end,duration,status,issued,img:_uploadedImg||''});
+  saveCerts(certs);
+  toast('Certificate saved! ✅');
+  clearAddForm();
+}
+function clearAddForm(){
+  ['addId','addName','addStart','addEnd','addIssued','addDomainCustom'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('addDomain').value='';
+  document.getElementById('addCustomWrap').style.display='none';
+  document.getElementById('uploadPreview').style.display='none';
+  document.getElementById('uploadZone').style.display='block';
+  document.getElementById('certFileInput').value='';
+  _uploadedImg='';
+}
+
+/* ════════════════════════════════════
+   DOMAIN-SPECIFIC LINES
+════════════════════════════════════ */
+function getDomainLines(domain, name){
+  const d=(domain||'').toLowerCase();
+  const n=name||'the candidate';
+  if(d.includes('web')||d.includes('frontend')||d.includes('html')){
+    return [`${n} demonstrated strong skills in modern web technologies including HTML5, CSS3,`,`JavaScript frameworks, and responsive design principles throughout the internship.`];
+  } else if(d.includes('data analy')||d.includes('data sci')){
+    return [`${n} showed excellent proficiency in data analysis, visualization using Python,`,`SQL queries, and deriving meaningful insights from complex datasets.`];
+  } else if(d.includes('machine learning')||d.includes('ml')||d.includes('ai')){
+    return [`${n} explored machine learning algorithms, model training and evaluation,`,`and demonstrated practical application of AI concepts in real-world scenarios.`];
+  } else if(d.includes('digital market')){
+    return [`${n} developed skills in SEO, social media strategy, content marketing,`,`and analytics tools, contributing effectively to digital campaigns.`];
+  } else if(d.includes('ui')||d.includes('ux')||d.includes('design')){
+    return [`${n} demonstrated creative excellence in user interface design, prototyping,`,`wireframing, and applying user-centered design principles using Figma and related tools.`];
+  } else if(d.includes('python')){
+    return [`${n} showcased strong Python programming skills including OOP, libraries such`,`as NumPy, Pandas, and built effective scripts and automation solutions.`];
+  } else if(d.includes('java')&&!d.includes('javascript')){
+    return [`${n} applied core Java programming, object-oriented principles, and frameworks`,`including Spring Boot, delivering well-structured and maintainable code.`];
+  } else if(d.includes('android')){
+    return [`${n} developed functional Android applications using Kotlin/Java, implementing`,`UI components, API integrations, and following Material Design guidelines.`];
+  } else if(d.includes('cyber')||d.includes('security')){
+    return [`${n} demonstrated knowledge in network security, threat analysis, ethical hacking`,`fundamentals, and contributed to identifying and mitigating potential vulnerabilities.`];
+  } else if(d.includes('cloud')){
+    return [`${n} gained hands-on experience with cloud platforms, infrastructure management,`,`deployment pipelines, and best practices in scalable cloud architecture.`];
+  } else {
+    return [`${n} demonstrated exceptional dedication, technical aptitude, and professional`,`conduct, contributing meaningfully to the organization's goals and objectives.`];
+  }
+}
+
+/* ════════════════════════════════════
+   QR CODE HELPER
+════════════════════════════════════ */
+function generateQRDataURL(text, size){
+  return new Promise((resolve)=>{
+    const wrap=document.getElementById('qrHidden');
+    wrap.innerHTML='';
+    wrap.style.width=size+'px'; wrap.style.height=size+'px';
+    try{
+      new QRCode(wrap,{text:text,width:size,height:size,colorDark:'#0d2248',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      setTimeout(()=>{
+        const img=wrap.querySelector('img'); const cvs=wrap.querySelector('canvas');
+        if(img&&img.src&&img.src.startsWith('data:')){ resolve(img.src); }
+        else if(cvs){ resolve(cvs.toDataURL('image/png')); }
+        else resolve(null);
+      },150);
+    } catch(e){ resolve(null); }
+  });
+}
+
+/* ════════════════════════════════════
+   REAL ISO 9001 LOGO DRAW
+════════════════════════════════════ */
+function drawISOLogo(ctx,cx,cy,r){
+  // Outer circle
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#1e4db7'; ctx.fill();
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.stroke();
+
+  // Inner white circle
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.78,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.stroke();
+
+  // "CERTIFIED" top arc text
+  ctx.fillStyle='#ffffff'; ctx.font=`bold ${r*0.22}px Sora,Arial`; ctx.textAlign='center';
+  ctx.save();
+  const topArcR=r*0.72;
+  const topText='CERTIFIED';
+  const angleSpan=Math.PI*0.9;
+  const startAngle=-Math.PI/2-angleSpan/2;
+  for(let i=0;i<topText.length;i++){
+    const angle=startAngle+(i/(topText.length-1))*angleSpan;
+    ctx.save();
+    ctx.translate(cx+Math.cos(angle)*topArcR, cy+Math.sin(angle)*topArcR);
+    ctx.rotate(angle+Math.PI/2);
+    ctx.fillText(topText[i],0,0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // ISO main text
+  ctx.fillStyle='#ffffff'; ctx.font=`bold ${r*0.42}px Sora,Arial`; ctx.textAlign='center';
+  ctx.fillText('ISO',cx,cy-r*0.05);
+
+  // 9001:2015
+  ctx.font=`bold ${r*0.26}px Sora,Arial`;
+  ctx.fillText('9001:2015',cx,cy+r*0.32);
+
+  // "COMPANY" bottom arc
+  const botArcR=r*0.72;
+  const botText='COMPANY';
+  const botStart=Math.PI/2-Math.PI*0.5;
+  ctx.font=`bold ${r*0.2}px Sora,Arial`;
+  for(let i=0;i<botText.length;i++){
+    const angle=botStart+(i/(botText.length-1))*Math.PI;
+    ctx.save();
+    ctx.translate(cx+Math.cos(angle)*botArcR, cy+Math.sin(angle)*botArcR);
+    ctx.rotate(angle+Math.PI/2);
+    ctx.fillText(botText[i],0,0);
+    ctx.restore();
+  }
+
+  // Star decoration
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  [-r*0.45,0,r*0.45].forEach(ox=>{ ctx.beginPath();ctx.arc(cx+ox,cy+r*0.55,r*0.06,0,Math.PI*2);ctx.fill(); });
+
+  ctx.restore();
+}
+
+/* ════════════════════════════════════
+   HANDWRITTEN SIGNATURE DRAW
+════════════════════════════════════ */
+function drawSignature(ctx, name, x, y, color='#0d2248'){
+  ctx.save();
+  ctx.strokeStyle=color;
+  ctx.fillStyle=color;
+  ctx.lineWidth=2.2;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+
+  // Draw signature using Dancing Script font style on canvas
+  const parts=name.trim().split(' ');
+  ctx.font=`italic 700 28px 'Dancing Script', Georgia, cursive`;
+  ctx.fillStyle=color;
+  ctx.textAlign='left';
+
+  // First name with extra flow
+  if(parts[0]){
+    ctx.font=`italic 700 30px 'Dancing Script', Georgia, cursive`;
+    ctx.fillText(parts[0], x, y);
+  }
+  if(parts[1]){
+    const fw=ctx.measureText(parts[0]||'').width+6;
+    ctx.font=`italic 700 30px 'Dancing Script', Georgia, cursive`;
+    ctx.fillText(parts[1], x+fw, y);
+  }
+
+  // Underline flourish
+  const full=name;
+  ctx.font=`italic 700 30px 'Dancing Script', Georgia, cursive`;
+  const tw=ctx.measureText(full).width+20;
+  ctx.beginPath();
+  ctx.moveTo(x, y+6);
+  // Curved flourish line
+  ctx.bezierCurveTo(x+tw*0.3, y+12, x+tw*0.7, y+8, x+tw, y+6);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* ════════════════════════════════════
+   DRAW CERTIFICATE
+════════════════════════════════════ */
+let _lastDataURL='';
+let _pendingQR=null;
+
+async function drawCert(canvas, qrDataURL){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Background gradient
+  const bgGrad=ctx.createLinearGradient(0,0,W,H);
+  bgGrad.addColorStop(0,'#f4f7fc');
+  bgGrad.addColorStop(1,'#edf1f9');
+  ctx.fillStyle=bgGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Dot grid texture
+  ctx.fillStyle='rgba(180,195,230,0.4)';
+  for(let x=24;x<W;x+=28){ for(let y=24;y<H;y+=28){ ctx.beginPath();ctx.arc(x,y,1.2,0,Math.PI*2);ctx.fill(); } }
+
+  // White card
+  const pad=28;
+  roundRect(ctx,pad,pad,W-pad*2,H-pad*2,16,'#ffffff',null);
+
+  // Right accent bar
+  ctx.save();
+  const accentW=76;
+  ctx.beginPath();
+  ctx.moveTo(W-pad-accentW,pad+16);
+  ctx.lineTo(W-pad,pad+16);
+  ctx.arcTo(W-pad,pad,W-pad-accentW,pad,16);
+  ctx.closePath();
+  ctx.fillStyle='#1e4db7';
+  ctx.fill();
+  ctx.fillRect(W-pad-accentW,pad+16,accentW,H-pad*2-32);
+  ctx.beginPath();
+  ctx.moveTo(W-pad-accentW,H-pad-16);
+  ctx.lineTo(W-pad,H-pad-16);
+  ctx.arcTo(W-pad,H-pad,W-pad-accentW,H-pad,16);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Top navy header bar
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pad+16,pad);
+  ctx.lineTo(W-pad-accentW,pad);
+  ctx.lineTo(W-pad-accentW,pad+80);
+  ctx.lineTo(pad,pad+80);
+  ctx.lineTo(pad,pad+16);
+  ctx.arcTo(pad,pad,pad+16,pad,16);
+  ctx.closePath();
+  const hGrad=ctx.createLinearGradient(pad,pad,W-pad-accentW,pad);
+  hGrad.addColorStop(0,'#0d2248');
+  hGrad.addColorStop(1,'#172f5e');
+  ctx.fillStyle=hGrad;
+  ctx.fill();
+  ctx.restore();
+
+  // Decorative diagonal stripes on header
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pad,pad,W-pad*2-accentW,80);
+  ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=12;
+  for(let i=-100;i<W;i+=30){ ctx.beginPath();ctx.moveTo(i,pad);ctx.lineTo(i+60,pad+80);ctx.stroke(); }
+  ctx.restore();
+
+  // Large watermark
+  ctx.save();
+  ctx.globalAlpha=0.035;
+  ctx.fillStyle='#0d2248';
+  ctx.font='bold 300px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('UM',W/2-30,H/2+100);
+  ctx.restore();
+
+  // Header text: Issued Date left
+  const issDate=document.getElementById('gcIssued').value;
+  ctx.fillStyle='rgba(255,255,255,0.7)';
+  ctx.font='500 12px Sora,Arial'; ctx.textAlign='left';
+  ctx.fillText('Issued Date:  '+(issDate?fmtD(issDate):'—'), pad+20, pad+30);
+
+  // CIN right
+  ctx.textAlign='right';
+  ctx.fillText('CIN No- U85500HR2023PTC115118', W-pad-accentW-12, pad+30);
+
+  // CERTIFICATE headline
+  ctx.fillStyle='#0d2248'; ctx.font='bold 40px Sora,Arial'; ctx.textAlign='left';
+  ctx.fillText('CERTIFICATE', pad+28, pad+140);
+  ctx.fillStyle='#3a5080'; ctx.font='500 20px Sora,Arial';
+  ctx.fillText('OF INTERNSHIP', pad+30, pad+168);
+
+  // UM Logo text right side of title
+  ctx.fillStyle='#0d2248'; ctx.font='bold 17px Sora,Arial'; ctx.textAlign='left';
+  ctx.fillText('⬡  UNIFIED MENTOR', W-pad-accentW-270, pad+115);
+  ctx.fillStyle='#6b7a99'; ctx.font='400 10px Sora,Arial';
+  ctx.fillText('YOUR SKILL.  SUCCESS & JOURNEY.', W-pad-accentW-270, pad+133);
+
+  // Divider line with glow effect
+  const divGrad=ctx.createLinearGradient(pad+28,0,W-pad-accentW-16,0);
+  divGrad.addColorStop(0,'rgba(30,77,183,0.8)');
+  divGrad.addColorStop(0.5,'rgba(79,142,247,0.5)');
+  divGrad.addColorStop(1,'rgba(30,77,183,0.1)');
+  ctx.strokeStyle=divGrad; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(pad+28,pad+185); ctx.lineTo(W-pad-accentW-16,pad+185); ctx.stroke();
+
+  // Candidate name
+  const name=document.getElementById('gcName').value||'Candidate Name';
+  ctx.fillStyle='#0d2248';
+  ctx.font=`italic bold 40px 'Dancing Script',Georgia,cursive`;
+  ctx.textAlign='left';
+  ctx.fillText(name, pad+28, pad+250);
+  const nw=ctx.measureText(name).width;
+  // Name underline with flourish
+  ctx.strokeStyle='rgba(30,77,183,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pad+28,pad+258); ctx.bezierCurveTo(pad+28+nw*0.3,pad+264,pad+28+nw*0.7,pad+260,pad+28+nw+20,pad+258); ctx.stroke();
+
+  // Body text
+  const domain=document.getElementById('gcDomain').value==='__custom__'?document.getElementById('gcDomainCustom').value:document.getElementById('gcDomain').value;
+  const dispDomain=domain||'[Domain]';
+  const start=document.getElementById('gcStart').value, end=document.getElementById('gcEnd').value;
+  const startFmt=start?fmtD(start):'DD/MM/YYYY', endFmt=end?fmtD(end):'DD/MM/YYYY';
+
+  ctx.fillStyle='#1a2340'; ctx.font='500 13.5px Sora,Arial'; ctx.textAlign='left';
+
+  const line1a='For  successfully completing  ';
+  const line1b='one month  internship as ';
+  ctx.fillText(line1a+line1b, pad+28, pad+300);
+  const w1=ctx.measureText(line1a+line1b).width;
+  ctx.font='italic 13.5px Georgia,serif'; ctx.fillStyle='#1e4db7';
+  ctx.fillText(dispDomain, pad+28+w1, pad+300);
+  ctx.fillStyle='#1a2340'; ctx.font='500 13.5px Sora,Arial';
+  ctx.fillText(`at Unified Mentor Pvt Ltd.  Dated from  ${startFmt}  to  ${endFmt}`, pad+28, pad+322);
+  ctx.fillText('During the internship we found him/her consistent & hard-working. We', pad+28, pad+344);
+  ctx.fillText('wish them all the best for their future endeavors.', pad+28, pad+366);
+
+  // Domain-specific lines
+  const domLines=getDomainLines(domain, name);
+  ctx.fillStyle='#3a5080'; ctx.font='400 12.5px Sora,Arial';
+  domLines.forEach((line,i)=>{ ctx.fillText(line, pad+28, pad+398+i*18); });
+
+  // Separator before signatures
+  ctx.strokeStyle='rgba(180,200,230,0.6)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad+28,pad+446); ctx.lineTo(W-pad-accentW-16,pad+446); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── SIGNATURES ROW ──
+  const sigY=pad+520;
+  const director=document.getElementById('gcDirector').value||'Paras Grover';
+  const awarded=document.getElementById('gcAwarded').value||'Sanket Patil';
+
+  // Director signature (handwritten)
+  drawSignature(ctx, director, pad+28, sigY-20, '#0d2248');
+  ctx.strokeStyle='rgba(30,77,183,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad+28,sigY+2); ctx.lineTo(pad+210,sigY+2); ctx.stroke();
+  ctx.fillStyle='#0d2248'; ctx.font='bold 13px Sora,Arial'; ctx.textAlign='left';
+  ctx.fillText(director, pad+28, sigY+18);
+  ctx.fillStyle='#6b7a99'; ctx.font='400 11px Sora,Arial';
+  ctx.fillText('Director', pad+28, sigY+34);
+
+  // ISO 9001 LOGO (real drawn)
+  const isoCX=W/2-accentW/2-10, isoCY=sigY-2;
+  drawISOLogo(ctx, isoCX, isoCY, 40);
+
+  // Awarded signature (handwritten)
+  drawSignature(ctx, awarded, W-pad-accentW-220, sigY-20, '#0d2248');
+  ctx.strokeStyle='rgba(30,77,183,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(W-pad-accentW-220,sigY+2); ctx.lineTo(W-pad-accentW-40,sigY+2); ctx.stroke();
+  ctx.fillStyle='#0d2248'; ctx.font='bold 13px Sora,Arial'; ctx.textAlign='left';
+  ctx.fillText(awarded, W-pad-accentW-220, sigY+18);
+  ctx.fillStyle='#6b7a99'; ctx.font='400 11px Sora,Arial';
+  ctx.fillText('Awarded By', W-pad-accentW-220, sigY+34);
+
+  // ── QR CODE ──
+  const qrX=W-pad-accentW-100, qrY=sigY-50, qrS=82;
+  if(qrDataURL){
+    ctx.save();
+    roundRect(ctx,qrX-6,qrY-6,qrS+12,qrS+12,6,'#ffffff',null);
+    ctx.strokeStyle='rgba(30,77,183,0.2)'; ctx.lineWidth=1;
+    ctx.strokeRect(qrX-6,qrY-6,qrS+12,qrS+12);
+    const qrImg=new Image(); qrImg.src=qrDataURL;
+    await new Promise(r=>{ qrImg.onload=r; qrImg.onerror=r; });
+    ctx.drawImage(qrImg, qrX, qrY, qrS, qrS);
+    ctx.restore();
+  } else {
+    // Placeholder QR grid
+    ctx.save();
+    roundRect(ctx,qrX-6,qrY-6,qrS+12,qrS+12,6,'#ffffff',null);
+    ctx.fillStyle='#f0f4f8'; ctx.fillRect(qrX,qrY,qrS,qrS);
+    const cell=qrS/7;
+    // Draw QR-like pattern
+    [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,0],[1,6],[2,0],[2,2],[2,3],[2,4],[2,6],[3,0],[3,2],[3,4],[3,6],[4,0],[4,2],[4,3],[4,4],[4,6],[5,0],[5,6],[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6]].forEach(([r,c])=>{
+      ctx.fillStyle='#0d2248'; ctx.fillRect(qrX+c*cell, qrY+r*cell, cell-1, cell-1);
+    });
+    ctx.restore();
+  }
+  // "Scan to Verify" text
+  ctx.fillStyle='#6b7a99'; ctx.font='400 10px Sora,Arial'; ctx.textAlign='center';
+  ctx.fillText('Scan to Verify', qrX+qrS/2, qrY-10);
+
+  // AN ISO footer line
+  ctx.fillStyle='#8a9ab8'; ctx.font='400 11px Sora,Arial'; ctx.textAlign='center';
+  ctx.fillText('AN ISO  9001:2015  Certified Company', W/2-accentW/2, H-pad-16);
+
+  // Cert ID bottom left
+  ctx.fillStyle='#a0aec0'; ctx.font='400 10px JetBrains Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText(document.getElementById('gcId').value||'UMID————', pad+28, H-pad-16);
+
+  _lastDataURL=canvas.toDataURL('image/png');
+}
+
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  if(typeof r==='number') r={tl:r,tr:r,br:r,bl:r};
+  ctx.beginPath();
+  ctx.moveTo(x+r.tl,y);
+  ctx.lineTo(x+w-r.tr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r.tr);
+  ctx.lineTo(x+w,y+h-r.br); ctx.quadraticCurveTo(x+w,y+h,x+w-r.br,y+h);
+  ctx.lineTo(x+r.bl,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r.bl);
+  ctx.lineTo(x,y+r.tl); ctx.quadraticCurveTo(x,y,x+r.tl,y);
+  ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}
+}
+
+function fmtD(d){ if(!d) return '—'; const p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d; }
+
+let _previewTimer=null;
+async function livePreview(){
+  clearTimeout(_previewTimer);
+  _previewTimer=setTimeout(async()=>{
+    const certId=document.getElementById('gcId').value||'UMID_PREVIEW';
+    const verifyURL=`https://certificateunifiedmentor2.vercel.app/?verify=${certId}`;
+    const qrData=await generateQRDataURL(verifyURL, 120);
+    await drawCert(document.getElementById('certCanvas'), qrData);
+  }, 300);
+}
+
+async function generateCertificate(){
+  const name=document.getElementById('gcName').value.trim();
+  const domain=document.getElementById('gcDomain').value==='__custom__'?document.getElementById('gcDomainCustom').value:document.getElementById('gcDomain').value;
+  const start=document.getElementById('gcStart').value, end=document.getElementById('gcEnd').value;
+  const issued=document.getElementById('gcIssued').value;
+  let id=document.getElementById('gcId').value.trim();
+  if(!id) id='UMID'+Math.floor(10000000000+Math.random()*90000000000);
+  if(!name||!domain||!start||!end||!issued){ toast('Fill all required fields','error'); return; }
+
+  const verifyURL=`https://certificateunifiedmentor2.vercel.app/?verify=${id}`;
+  const qrData=await generateQRDataURL(verifyURL,160);
+  const canvas=document.getElementById('certCanvas');
+  await drawCert(canvas, qrData);
+  const imgData=_lastDataURL;
+
+  const certs=loadCerts();
+  if(certs.find(c=>c.id===id)){ id='UMID'+Math.floor(10000000000+Math.random()*90000000000); document.getElementById('gcId').value=id; toast('ID existed — new ID assigned'); }
+  certs.push({id,name,domain,start,end,duration:document.getElementById('gcDuration').value,status:'Completed',issued,img:imgData,generated:true});
+  saveCerts(certs);
+  toast('🎨 Certificate generated & saved! ID: '+id);
+}
+
+async function downloadGeneratedCert(){
+  const name=document.getElementById('gcName').value||'Certificate';
+  const id=document.getElementById('gcId').value||'UMID';
+  const verifyURL=`https://certificateunifiedmentor2.vercel.app/?verify=${id}`;
+  const qrData=await generateQRDataURL(verifyURL,160);
+  const canvas=document.getElementById('certCanvas');
+  await drawCert(canvas, qrData);
+  const link=document.createElement('a');
+  link.href=_lastDataURL;
+  link.download=name.replace(/ /g,'_')+'_Certificate.png';
+  link.click();
+  toast('Download started!');
+}
+
+function regenCert(id){
+  const cert=loadCerts().find(c=>c.id===id); if(!cert) return;
+  switchTab('autocert',document.querySelectorAll('.sidebar-item')[3]);
+  document.getElementById('gcName').value=cert.name;
+  document.getElementById('gcId').value=cert.id;
+  if(cert.domain){
+    const sel=document.getElementById('gcDomain');
+    let found=false;
+    for(let i=0;i<sel.options.length;i++){ if(sel.options[i].value===cert.domain){sel.value=cert.domain;found=true;break;} }
+    if(!found){ sel.value='__custom__'; document.getElementById('gcCustomWrap').style.display='block'; document.getElementById('gcDomainCustom').value=cert.domain; }
+  }
+  document.getElementById('gcStart').value=cert.start;
+  document.getElementById('gcEnd').value=cert.end;
+  document.getElementById('gcDuration').value=cert.duration;
+  document.getElementById('gcIssued').value=cert.issued;
+  livePreview();
+  toast('Loaded for regeneration');
+}
+
+/* ════════════════════════════════════
+   VIEW / DELETE
+════════════════════════════════════ */
+let _modalCert=null;
+function viewCert(id){
+  const cert=loadCerts().find(c=>c.id===id); if(!cert) return;
+  _modalCert=cert;
+  document.getElementById('modalCertImg').src=cert.img||'';
+  document.getElementById('mCertId').textContent=cert.id;
+  document.getElementById('mName').textContent=cert.name;
+  document.getElementById('mDomain').textContent=cert.domain;
+  document.getElementById('mPeriod').textContent=fmt(cert.start)+' – '+fmt(cert.end);
+  document.getElementById('mDuration').textContent=cert.duration;
+  document.getElementById('mStatus').textContent=cert.status;
+  document.getElementById('viewModal').classList.add('open');
+}
+function dlFromModal(){
+  if(!_modalCert) return;
+  const link=document.createElement('a');
+  link.href=_modalCert.img; link.download=_modalCert.name.replace(/ /g,'_')+'_Certificate.png';
+  link.click(); toast('Download started!');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function deleteCert(id){
+  if(!confirm('Delete certificate '+id+'?')) return;
+  saveCerts(loadCerts().filter(c=>c.id!==id));
+  renderAllCerts(_fq); refreshDashboard(); toast('Deleted');
+}
+
+/* ════════════════════════════════════
+   ADMIN LOOKUP
+════════════════════════════════════ */
+function adminLookup(){
+  const q=document.getElementById('adminSearchInput').value.trim().toUpperCase();
+  const cert=loadCerts().find(c=>c.id.toUpperCase()===q);
+  const el=document.getElementById('adminLookupResult');
+  if(!cert){ el.innerHTML=`<div class="not-found"><div class="nf-icon">🔍</div><h3>Not Found</h3><p>No certificate with ID <strong>${q}</strong></p></div>`; return; }
+  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+    <img src="${cert.img||''}" style="width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12)">
+    <div class="info-card" style="box-shadow:none;border:1px solid var(--border)">
+      <div class="irow"><div class="irow-icon">🪪</div><div><div class="ilabel">ID</div><div class="ivalue">${cert.id}</div></div></div>
+      <div class="irow"><div class="irow-icon">👤</div><div><div class="ilabel">Name</div><div class="ivalue">${cert.name}</div></div></div>
+      <div class="irow"><div class="irow-icon">💻</div><div><div class="ilabel">Domain</div><div class="ivalue">${cert.domain}</div></div></div>
+      <div class="irow"><div class="irow-icon">📅</div><div><div class="ilabel">Period</div><div class="ivalue">${fmt(cert.start)} – ${fmt(cert.end)}</div></div></div>
+      <div class="irow"><div class="irow-icon">✅</div><div><div class="ilabel">Status</div><div class="ivalue green">${cert.status}</div></div></div>
+    </div></div>`;
+}
+
+/* ════════════════════════════════════
+   GENERATE ID
+════════════════════════════════════ */
+function genId(){ const id='UMID'+Math.floor(10000000000+Math.random()*90000000000); document.getElementById('genIdText').textContent=id; document.getElementById('genResult').style.display='block'; }
+function copyId(){ const t=document.getElementById('genIdText').textContent; navigator.clipboard.writeText(t).then(()=>toast('Copied: '+t)).catch(()=>toast('Copied!')); }
+function useIdInForm(){ const t=document.getElementById('genIdText').textContent; switchTab('add',document.querySelectorAll('.sidebar-item')[2]); document.getElementById('addId').value=t; toast('ID pasted into Add Certificate form'); }
+
+/* ════════════════════════════════════
+   HELPERS
+════════════════════════════════════ */
+function fmt(d){ if(!d) return '—'; const p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d; }
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=(type==='error'?'❌ ':'✓ ')+msg;
+  t.className='toast'+(type==='error'?' error':'');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* QR SCAN LANDING */
+window.addEventListener('load',()=>{
+  const urlParams=new URLSearchParams(window.location.search);
+  const vid=urlParams.get('verify');
+  if(vid){ showQRLanding(vid); }
+  livePreview();
+});
+
+function fmtQRL(d){ if(!d) return '—'; const p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d; }
+
+function showQRLanding(certId){
+  const existing=document.getElementById('qrLanding');
+  if(existing) existing.remove();
+  const overlay=document.createElement('div');
+  overlay.id='qrLanding';
+  const css=`
+  <style id="qrlStyle">
+  #qrLanding{position:fixed;inset:0;z-index:9000;background:linear-gradient(145deg,#0d2248 0%,#172f5e 50%,#1e4db7 100%);display:flex;flex-direction:column;align-items:center;overflow-y:auto;font-family:'Sora',sans-serif;animation:qrFadeIn .5s ease}
+  @keyframes qrFadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes qrSlideUp{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes qrPop{0%{transform:scale(0.4);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+  @keyframes qrSpin{to{transform:rotate(360deg)}}
+  @keyframes qrPulse{0%{transform:scale(.85);opacity:1}100%{transform:scale(2.1);opacity:0}}
+  @keyframes qrProgress{from{width:0}to{width:100%}}
+  @keyframes qrDraw{from{stroke-dashoffset:300}to{stroke-dashoffset:0}}
+  @keyframes qrCircle{from{stroke-dashoffset:500}to{stroke-dashoffset:0}}
+  @keyframes qrRowIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes qrBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .qrl-hd{width:100%;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.3);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;z-index:2}
+  .qrl-brand{display:flex;align-items:center;gap:10px}
+  .qrl-logo{width:34px;height:34px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .qrl-bname{font-size:14px;font-weight:800;color:#fff}
+  .qrl-bname b{color:#7eb3ff}
+  .qrl-close{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;transition:.2s}
+  .qrl-close:hover{background:rgba(255,255,255,.2);color:#fff}
+  .qrl-body{width:100%;max-width:480px;padding:32px 20px 64px;margin:0 auto}
+  /* SCAN */
+  .qrl-scan{text-align:center;animation:qrSlideUp .5s ease both;padding:20px 0}
+  .qrl-ring{width:108px;height:108px;border-radius:50%;border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;position:relative}
+  .qrl-ring::before{content:'';position:absolute;inset:-6px;border-radius:50%;border:3px solid transparent;border-top-color:#4f8ef7;border-right-color:#4f8ef7;animation:qrSpin 1s linear infinite}
+  .qrl-ring::after{content:'';position:absolute;inset:-18px;border-radius:50%;border:2px solid rgba(79,142,247,.25);animation:qrPulse 1.8s ease infinite}
+  .qrl-ring-icon{font-size:42px}
+  .qrl-scan h2{color:#fff;font-size:22px;font-weight:800;margin-bottom:8px}
+  .qrl-scan p{color:rgba(255,255,255,.5);font-size:13.5px;line-height:1.7}
+  .qrl-id-box{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:9px;padding:10px 18px;margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:13.5px;font-weight:600;color:#93c5fd;letter-spacing:.5px}
+  .qrl-prog{width:220px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:22px auto 0;overflow:hidden}
+  .qrl-prog-fill{height:100%;background:linear-gradient(90deg,#4f8ef7,#a5c8ff,#4f8ef7);background-size:300px 100%;animation:qrProgress 2s ease forwards}
+  /* SUCCESS */
+  .qrl-success{display:none;animation:qrSlideUp .4s ease both}
+  .qrl-check-area{text-align:center;padding:8px 0 24px}
+  .qrl-check-svg{width:96px;height:96px;display:block;margin:0 auto;animation:qrPop .7s cubic-bezier(.34,1.56,.64,1) both}
+  .qrl-v-label{font-size:23px;font-weight:800;color:#4ade80;margin-top:14px;margin-bottom:5px}
+  .qrl-v-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7}
+  /* CARD */
+  .qrl-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45);margin-bottom:20px;animation:qrSlideUp .5s .1s ease both}
+  .qrl-cert-img{width:100%;display:block;border-bottom:1px solid #e8edf5}
+  .qrl-row{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid #f1f5fb;animation:qrRowIn .4s ease both}
+  .qrl-row:last-child{border-bottom:none}
+  .qrl-row-icon{width:32px;height:32px;background:#eef2fb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+  .qrl-lbl{font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}
+  .qrl-val{font-size:13.5px;font-weight:700;color:#0d1f3d}
+  .qrl-val.green{color:#16a34a}
+  /* ACTIONS */
+  .qrl-actions{display:flex;flex-direction:column;gap:10px;animation:qrSlideUp .5s .2s ease both}
+  .qrl-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Sora',sans-serif;transition:all .2s;text-decoration:none;letter-spacing:.2px}
+  .qrl-btn:hover{transform:translateY(-2px)}
+  .qrl-btn-dl{background:linear-gradient(135deg,#1e4db7,#2563eb);color:#fff;box-shadow:0 8px 24px rgba(30,77,183,.4)}
+  .qrl-btn-share{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;box-shadow:0 8px 24px rgba(22,163,74,.3)}
+  .qrl-btn-web{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18)}
+  .qrl-btn-web:hover{background:rgba(255,255,255,.18)}
+  /* FOOTER */
+  .qrl-foot{text-align:center;padding:28px 0 0;border-top:1px solid rgba(255,255,255,.08);margin-top:24px;animation:qrSlideUp .5s .3s ease both}
+  .qrl-foot p{font-size:12px;color:rgba(255,255,255,.3);line-height:1.8}
+  .qrl-foot a{color:rgba(79,142,247,.75);text-decoration:none}
+  .qrl-foot a:hover{color:#4f8ef7}
+  .qrl-cin{display:inline-block;margin-top:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 14px;font-size:10px;font-weight:600;color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace;letter-spacing:.4px}
+  /* NOT FOUND */
+  .qrl-nf{display:none;text-align:center;animation:qrSlideUp .5s ease both;padding:20px 0}
+  .qrl-nf-icon{font-size:64px;margin-bottom:18px;animation:qrBounce 2.5s ease infinite}
+  .qrl-nf h2{color:#fff;font-size:22px;font-weight:800;margin-bottom:12px}
+  .qrl-nf p{color:rgba(255,255,255,.5);font-size:13.5px;line-height:1.75;margin-bottom:24px}
+  .qrl-nf-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);padding:13px 28px;border-radius:10px;font-size:13.5px;font-weight:700;text-decoration:none;transition:.2s}
+  .qrl-nf-btn:hover{background:rgba(255,255,255,.2)}
+  </style>`;
+
+  overlay.innerHTML = css + `
+  <div class="qrl-hd">
+    <div class="qrl-brand">
+      <div class="qrl-logo">
+        <svg viewBox="0 0 36 36" fill="none" width="26" height="26"><rect width="36" height="36" rx="6" fill="#0d2248"/><path d="M6 7L6 25L12 25L18 14L24 25L30 25L30 7L24 7L24 18L18 9L12 18L12 7Z" fill="#4f8ef7"/></svg>
+      </div>
+      <span class="qrl-bname">Unified <b>Mentor</b></span>
+    </div>
+    <button class="qrl-close" onclick="document.getElementById('qrLanding').remove()">✕ Close</button>
+  </div>
+  <div class="qrl-body">
+
+    <div class="qrl-scan" id="qrlScan">
+      <div class="qrl-ring"><div class="qrl-ring-icon">🔍</div></div>
+      <h2>Verifying Certificate…</h2>
+      <p>Checking authenticity with<br>Unified Mentor Pvt Ltd database</p>
+      <div class="qrl-id-box">🪪 ${certId}</div>
+      <div class="qrl-prog"><div class="qrl-prog-fill"></div></div>
+    </div>
+
+    <div class="qrl-success" id="qrlSuccess">
+      <div class="qrl-check-area">
+        <svg class="qrl-check-svg" viewBox="0 0 100 100">
+          <circle fill="#16a34a" cx="50" cy="50" r="48"/>
+          <circle fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3" cx="50" cy="50" r="45" stroke-dasharray="500" style="animation:qrCircle .7s ease forwards;stroke-dashoffset:500"/>
+          <polyline fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" points="25,52 43,70 75,32" stroke-dasharray="300" style="stroke-dashoffset:300;animation:qrDraw .55s .6s ease forwards"/>
+        </svg>
+        <div class="qrl-v-label">Certificate Verified ✅</div>
+        <div class="qrl-v-sub">Authentic certificate officially issued by<br><strong style="color:rgba(255,255,255,.7)">Unified Mentor Pvt Ltd</strong></div>
+      </div>
+      <div class="qrl-card">
+        <img class="qrl-cert-img" id="qrlCertImg" src="" alt="Certificate">
+        <div id="qrlRows"></div>
+      </div>
+      <div class="qrl-actions">
+        <button class="qrl-btn qrl-btn-dl" onclick="qrlDownload()">⬇ Download Certificate (PNG)</button>
+        <button class="qrl-btn qrl-btn-share" onclick="qrlShare()">📤 Share Verification Link</button>
+        <a href="https://www.unifiedmentor.com" target="_blank" class="qrl-btn qrl-btn-web">🌐 Visit unifiedmentor.com</a>
+      </div>
+      <div class="qrl-foot">
+        <p>Verified via Unified Mentor Certificate Portal<br>
+          <a href="https://unifiedmentor.com/contact-us" target="_blank">Contact Us</a> &nbsp;·&nbsp;
+          <a href="https://unifiedmentor.com/about" target="_blank">About Us</a> &nbsp;·&nbsp;
+          <a href="https://www.unifiedmentor.com" target="_blank">Official Website</a>
+        </p>
+        <div class="qrl-cin">CIN: U85500HR2023PTC115118 &nbsp;·&nbsp; ISO 9001:2015 Certified</div>
+      </div>
+    </div>
+
+    <div class="qrl-nf" id="qrlNF">
+      <div class="qrl-nf-icon">🔍</div>
+      <h2>Certificate Not Found</h2>
+      <p>No certificate was found for ID:<br>
+        <strong style="color:#93c5fd;font-family:'JetBrains Mono',monospace;font-size:15px">${certId}</strong><br><br>
+        This QR code may be invalid, expired, or the certificate has not been registered yet. Please contact Unified Mentor to verify.
+      </p>
+      <a href="https://unifiedmentor.com/contact-us" target="_blank" class="qrl-nf-btn">📞 Contact Unified Mentor</a>
+      <div class="qrl-foot" style="margin-top:28px">
+        <p><a href="https://www.unifiedmentor.com" target="_blank">www.unifiedmentor.com</a></p>
+        <div class="qrl-cin">CIN: U85500HR2023PTC115118 &nbsp;·&nbsp; ISO 9001:2015 Certified</div>
+      </div>
+    </div>
+
+  </div>`;
+
+  document.body.appendChild(overlay);
+
+  setTimeout(()=>{
+    const cert=loadCerts().find(c=>c.id.toUpperCase()===certId.toUpperCase());
+    document.getElementById('qrlScan').style.display='none';
+    if(cert){
+      document.getElementById('qrlSuccess').style.display='block';
+      const img=document.getElementById('qrlCertImg');
+      if(cert.img){ img.src=cert.img; } else { img.style.display='none'; }
+      const rows=[
+        {icon:'🪪',lbl:'Certificate ID',val:cert.id,cls:''},
+        {icon:'👤',lbl:'Candidate Name',val:cert.name,cls:''},
+        {icon:'💻',lbl:'Domain',val:cert.domain,cls:''},
+        {icon:'📅',lbl:'Internship Period',val:fmtQRL(cert.start)+' – '+fmtQRL(cert.end),cls:''},
+        {icon:'⏱',lbl:'Duration',val:cert.duration,cls:''},
+        {icon:'📆',lbl:'Issue Date',val:fmtQRL(cert.issued),cls:''},
+        {icon:'✅',lbl:'Status',val:cert.status,cls:'green'},
+      ];
+      document.getElementById('qrlRows').innerHTML=rows.map((r,i)=>`
+        <div class="qrl-row" style="animation-delay:${i*0.07}s">
+          <div class="qrl-row-icon">${r.icon}</div>
+          <div><div class="qrl-lbl">${r.lbl}</div><div class="qrl-val ${r.cls}">${r.val}</div></div>
+        </div>`).join('');
+      window._qrlCert=cert;
+    } else {
+      document.getElementById('qrlNF').style.display='block';
+    }
+  }, 2400);
+}
+
+function qrlDownload(){
+  const cert=window._qrlCert; if(!cert||!cert.img) return;
+  const a=document.createElement('a');
+  a.href=cert.img; a.download=(cert.name||'Certificate').replace(/ /g,'_')+'_Certificate.png';
+  a.click(); toast('Download started!');
+}
+async function qrlShare(){
+  const certId=window._qrlCert?window._qrlCert.id:'';
+  const url=`https://certificateunifiedmentor2.vercel.app/?verify=${certId}`;
+  const cert=window._qrlCert;
+  const text=cert?`Verified: ${cert.name} completed ${cert.domain} at Unified Mentor Pvt Ltd`:'Certificate Verification — Unified Mentor';
+  if(navigator.share){
+    try{ await navigator.share({title:'Certificate Verification',text,url}); return; }catch(e){}
+  }
+  try{ await navigator.clipboard.writeText(url); toast('🔗 Verification link copied!'); }
+  catch(e){ toast('Copy the URL from your browser to share'); }
+}
+
+document.getElementById('viewModal').addEventListener('click',function(e){ if(e.target===this) closeModal('viewModal'); });
+</script>
+</body>
+</html>
